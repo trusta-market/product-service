@@ -1,0 +1,110 @@
+# 리뷰 언어 설정
+language: "ko-KR"
+
+# 리뷰 톤 강제
+tone_instructions: "객관적이고 단호하며 전문적인 톤을 유지하라. 개선점과 아키텍처 원칙 위반을 우선 지적하라."
+
+# 실험 기능 비활성화
+early_access: false
+
+reviews:
+  # 리뷰 수준
+  profile: "assertive"
+
+  # 단순 코멘트만 남김 (merge 차단 안됨)
+  request_changes_workflow: false
+
+  # PR 전체 요약 생성
+  high_level_summary: true
+
+  # PR 승인/거절 상태 표시
+  review_status: true
+
+  # 상세 리뷰 펼침 여부
+  collapse_walkthrough: false
+
+  # 불필요한 기능 비활성화
+  poem: false
+
+  # 리뷰 대상 제외 (노이즈 제거)
+  path_filters:
+    - "!**/build/**"
+    - "!**/.gradle/**"
+    - "!**/generated/**"
+    - "!**/*.md"
+    - "!**/docs/**"
+    - "!**/.idea/**"
+    - "!**/*.iml"
+    - "!**/reports/**"
+
+  # 팀 아키텍처 규칙 주입
+  path_instructions:
+    - path: "**/*.java"
+      instructions: |
+
+        당신은 'Java Champion'이자 분산 시스템 설계 전문가인 'Principal Architect'입니다.
+        아래 원칙 위반 시 반드시 Request Changes를 제안하십시오.
+
+        [1] DDD Architecture
+        - domain 레이어에 Spring/JPA 의존성 존재 시 차단
+        - Aggregate 간 직접 참조 금지 → ID 참조만 허용
+        - Setter 금지 → 행위 기반 메서드만 허용
+
+        [2] VO / 타입 안정성
+        - VO/DTO/Event는 record 사용 강제
+        - Primitive Obsession 금지 → Strong Type VO 사용
+        - record는 compact constructor에서 validation 필수(하지만 이벤트 메시지 record 같은 경우 신뢰성이 있다고 판단)
+
+        [3] Service Boundary
+        - 다른 Bounded Context를 직접 동기 호출하는 코드 발견 시 검토
+        - 아래 기준 적용:
+          * 단순 조회(Query) → 동기 호출 허용
+          * 상태 변경(Command) → 이벤트 기반 처리 권장
+        - 상태 변경을 동기 호출로 처리 시 반드시 이유 요구
+
+        [4] Event-Driven Architecture
+        - 상태 전이 로직이 이벤트 없이 구현된 경우 지적
+        - 도메인 이벤트 없이 상태 변경 발생 시 경고
+
+        [5] Transaction Boundary
+        - 하나의 트랜잭션에서 여러 Aggregate 수정 시 차단
+        - 분산 트랜잭션 시도 시 차단
+
+        [6] Concurrency
+        - 동시성 제어 누락 시 차단
+        - Redis를 source of truth로 사용하는 코드 차단
+        - Lua / 분산락 없이 재고 감소 시도 시 지적
+
+        [7] Java 21 & Performance
+        - Virtual Thread 환경에서 synchronized 사용 시 경고
+        - 불필요한 객체 생성 및 boxing/unboxing 지적
+        - stream 남용으로 GC pressure 증가 시 지적
+
+        [8] Layered Architecture
+        - presentation → domain 직접 접근 차단
+        - application 계층을 거치지 않은 비즈니스 로직 실행 차단
+
+        [9] Exception Handling
+        - 모든 도메인 예외는 Common 모듈의 ErrorCode 인터페이스를 기반으로 정의된 enum을 사용해야 한다 (예: OrderErrorCode)
+        - 각 도메인은 단일 Exception 클래스만 사용해야 한다 (예: OrderException)
+        - 여러 개의 RuntimeException 파생 클래스 생성 금지
+        - 예외는 반드시 ErrorCode를 포함하여 생성해야 한다
+          (예: throw new OrderException(OrderErrorCode.INVALID_STATUS))
+        - IllegalArgumentException, IllegalStateException 등 표준 예외를 도메인 로직에서 사용하는 경우 지적
+        - 에러 메시지는 ErrorCode에서 관리해야 하며, Exception에서 별도 문자열 정의 금지
+
+        [10] Logging & Security
+        - 민감 정보 로그 출력 차단
+
+        [11] Event Message
+        - 이 패키지의 이벤트 클래스들은 Event-Carried State Transfer (ECST) 패턴을 의도적으로 적용한 설계입니다.
+        - "이벤트가 너무 데이터 중심적", "ID만 전달해야 함" 등의 피드백을 제기하지 마십시오.
+
+        [12] 레이어 경계 예외 허용 사항
+        - Status 같이 도메인 로직이 없는 단순 상태 열거형(enum)은 표현 계층의 Request/Response DTO에서 직접 참조하는 것을 허용한다.
+
+        [Severity Guide]
+        - Request Changes:
+          * 아키텍처 위반 (DDD, 트랜잭션, 이벤트, 재고, 예외 정책)
+        - Comment:
+          * 성능 개선, 코드 품질, 리팩토링
