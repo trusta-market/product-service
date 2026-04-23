@@ -13,7 +13,7 @@ public enum ProductStatus {
 
     private final String description;
 
-    // 상품구매가능 확인
+    // 상품구매가능한지 확인
     public boolean isAvailableForOrder() {
         return this == ON_SALE;
     }

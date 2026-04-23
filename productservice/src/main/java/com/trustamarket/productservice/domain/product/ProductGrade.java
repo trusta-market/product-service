@@ -12,5 +12,6 @@ public enum ProductGrade {
     B("B"),
     C("C");
 
+
     private final String description;
 }
