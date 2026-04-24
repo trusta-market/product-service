@@ -67,7 +67,9 @@ public class Product {
         this.description = description;
         this.price = price;
         this.grade = grade;
-        this.status = ProductStatus.ON_SALE;
+        this.status = requiresInspection
+                ? ProductStatus.PENDING_INSPECTION
+                : ProductStatus.ON_SALE;
         this.inspectionStatus = requiresInspection
                 ? InspectionStatus.PENDING
                 : InspectionStatus.NONE;
@@ -166,6 +168,7 @@ public class Product {
         }
         this.grade = inspectedGrade;
         this.inspectionStatus = InspectionStatus.PASSED;
+        this.status = ProductStatus.ON_SALE;
         onUpdate();
     }
 
