@@ -1,6 +1,8 @@
 package com.trustamarket.productservice.domain.product;
 
+import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -10,15 +12,20 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-
+@Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Product {
 
     private static final int MAX_IMAGE_COUNT = 10;
     private static final int MAX_TITLE_LENGTH = 100;
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Long id;
+
     private Long sellerId;
     private Long categoryId;
     private String title;
@@ -27,7 +34,11 @@ public class Product {
     private ProductGrade grade;
     private ProductStatus status;
     private InspectionStatus inspectionStatus;
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "product_id")
     private List<ProductImage> images;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -253,20 +264,5 @@ public class Product {
         if (price < 0) {
             throw new IllegalArgumentException("가격은 0원 이상이어야 합니다.");
         }
-    }
-
-
-    // 상품id로 같은 상품인지 확가
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Product)) return false;
-        Product product = (Product) o;
-        return Objects.equals(id, product.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
     }
 }
