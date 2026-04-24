@@ -85,7 +85,7 @@ public class Product {
         return new Product(sellerId, categoryId, title, description, price, grade, requiresInspection);
     }
 
-    // db에 저자오디어있던 id나 등록시간 같은걸 다시 살려낸다
+    // db에 저장디어있던 id나 등록시간 같은걸 다시 살려낸다
     public static Product restore(Long id, Long sellerId, Long categoryId, String title,
                                   String description, int price, ProductGrade grade,
                                   ProductStatus status,InspectionStatus inspectionStatus, List<ProductImage> images,
@@ -255,6 +255,10 @@ public class Product {
 
     // 대표이미지 취소 및 재설정
     public void changeThumbnail(Long newThumbnailImageId) {
+        ProductImage newThumbnail = images.stream()
+                .filter(img -> Objects.equals(img.getId(), newThumbnailImageId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("해당 ID를 가진 이미지가 상품에 존재하지 않습니다."));
         images.stream()
                 .filter(ProductImage::isThumbnail)
                 .forEach(ProductImage::unmarkThumbnail);
