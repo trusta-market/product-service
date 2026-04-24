@@ -190,6 +190,11 @@ public class Product {
             throw new IllegalStateException("이미지는 최대 " + MAX_IMAGE_COUNT + "장까지 등록 가능합니다.");
         }
 
+        // 이미지 중복확인 추가
+        if (image.getId() != null && this.images.stream().anyMatch(img -> image.getId().equals(img.getId()))) {
+            throw new IllegalArgumentException("이미 등록된 이미지입니다.");
+        }
+
         if (shouldSetAsThumbnail()) {
             image.markAsThumbnail();
         }
