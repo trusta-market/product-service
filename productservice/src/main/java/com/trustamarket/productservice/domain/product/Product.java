@@ -14,6 +14,7 @@ import java.util.Objects;
 
 @Entity
 @Getter
+@Table(name = "p_Products")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Product {
@@ -26,13 +27,28 @@ public class Product {
     @EqualsAndHashCode.Include
     private Long id;
 
+    @Column(nullable = false)
     private Long sellerId;
+
+    @Column(nullable = false)
     private Long categoryId;
+
+    @Column(nullable = false, length = MAX_TITLE_LENGTH)
     private String title;
+
+    @Column(columnDefinition = "TEXT")
     private String description;
+
+    @Column(nullable = false)
     private int price;
+
+    @Enumerated(EnumType.STRING)
     private ProductGrade grade;
+
+    @Enumerated(EnumType.STRING)
     private ProductStatus status;
+
+    @Enumerated(EnumType.STRING)
     private InspectionStatus inspectionStatus;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
@@ -60,7 +76,6 @@ public class Product {
         this.updatedAt = LocalDateTime.now();
     }
 
-    // ── 생성 팩토리 ───────────────────────────────────────────────
 
     // 상품등록
     public static Product create(Long sellerId, Long categoryId, String title,
@@ -139,11 +154,17 @@ public class Product {
         onUpdate();
     }
 
-    // 검수 통과 → 상세페이지 검수완료 뱃지 표시
-    public void passInspection() {
+    // 검수 대상 여부 — 카테고리별 기준 금액과 비교
+    public boolean requiresInspection(int highValueThreshold) {
+        return this.price >= highValueThreshold;
+    }
+
+    // 검수 통과 → 등급 확정 + 상세페이지 검수완료 뱃지 표시
+    public void completeInspection(ProductGrade inspectedGrade) {
         if (this.inspectionStatus != InspectionStatus.IN_PROGRESS) {
-            throw new IllegalStateException("검수 중인 상품만 검수 완료 처리할 수 있습니다.");
+            throw new IllegalStateException("검수 중인 상품만 등급을 확정할 수 있습니다.");
         }
+        this.grade = inspectedGrade;
         this.inspectionStatus = InspectionStatus.PASSED;
         onUpdate();
     }
@@ -197,8 +218,6 @@ public class Product {
         }
         onUpdate();
     }
-
-    // ── 도메인 쿼리 (Domain Query) ───────────────────────────────
 
     // 상품주인 확인
     public boolean isOwnedBy(Long sellerId) {
