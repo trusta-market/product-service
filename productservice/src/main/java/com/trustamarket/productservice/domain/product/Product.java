@@ -166,6 +166,9 @@ public class Product {
         if (this.inspectionStatus != InspectionStatus.IN_PROGRESS) {
             throw new IllegalStateException("검수 중인 상품만 등급을 확정할 수 있습니다.");
         }
+        if (inspectedGrade == null) {
+            throw new IllegalArgumentException("검수 등급은 필수입니다.");
+        }
         this.grade = inspectedGrade;
         this.inspectionStatus = InspectionStatus.PASSED;
         this.status = ProductStatus.ON_SALE;
