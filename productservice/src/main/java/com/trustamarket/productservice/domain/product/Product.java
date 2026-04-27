@@ -28,7 +28,7 @@ public class Product {
     private UUID sellerId;
 
     @Column(nullable = false)
-    private Long categoryId;
+    private UUID categoryId;
 
     @Column(nullable = false, length = MAX_TITLE_LENGTH)
     private String title;
@@ -37,7 +37,7 @@ public class Product {
     private String description;
 
     @Column(nullable = false)
-    private int price;
+    private Integer price;
 
     @Enumerated(EnumType.STRING)
     private ProductGrade grade;
@@ -55,8 +55,8 @@ public class Product {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    private Product(UUID sellerId, Long categoryId, String title,
-                    String description, int price, ProductGrade grade, boolean requiresInspection) {
+    private Product(UUID sellerId, UUID categoryId, String title,
+                    String description, Integer price, ProductGrade grade, boolean requiresInspection) {
         validate(title, price);
         this.sellerId = sellerId;
         this.categoryId = categoryId;
@@ -77,14 +77,14 @@ public class Product {
 
 
     // 상품등록
-    public static Product create(UUID sellerId, Long categoryId, String title,
-                                 String description, int price, ProductGrade grade, boolean requiresInspection) {
+    public static Product create(UUID sellerId, UUID categoryId, String title,
+                                 String description, Integer price, ProductGrade grade, boolean requiresInspection) {
         return new Product(sellerId, categoryId, title, description, price, grade, requiresInspection);
     }
 
     // db에 저장디어있던 id나 등록시간 같은걸 다시 살려낸다
-    public static Product restore(UUID id, UUID sellerId, Long categoryId, String title,
-                                  String description, int price, ProductGrade grade,
+    public static Product restore(UUID id, UUID sellerId, UUID categoryId, String title,
+                                  String description, Integer price, ProductGrade grade,
                                   ProductStatus status, InspectionStatus inspectionStatus, List<ProductImage> images,
                                   LocalDateTime createdAt, LocalDateTime updatedAt) {
         Product product = new Product();
@@ -105,8 +105,8 @@ public class Product {
 
 
     // 제목, 가격 같은 상세내용 수정
-    public void update(String title, String description, int price,
-                       ProductGrade grade, Long categoryId) {
+    public void update(String title, String description, Integer price,
+                       ProductGrade grade, UUID categoryId) {
         validate(title, price);
         this.title = title;
         this.description = description;
@@ -201,7 +201,7 @@ public class Product {
     }
 
     // 이미지 삭제
-    public void removeImage(Long imageId) {
+    public void removeImage(UUID imageId) {
         if (imageId == null) {
             throw new IllegalArgumentException("삭제하려는 이미지 ID는 null일 수 없습니다.");
         }
@@ -231,7 +231,7 @@ public class Product {
     }
 
     // 상품주인 확인
-    public boolean isOwnedBy(Long sellerId) {
+    public boolean isOwnedBy(UUID sellerId) {
         return Objects.equals(this.sellerId, sellerId);
     }
 
@@ -254,7 +254,7 @@ public class Product {
     }
 
     // 대표이미지 취소 및 재설정
-    public void changeThumbnail(Long newThumbnailImageId) {
+    public void changeThumbnail(UUID newThumbnailImageId) {
         ProductImage newThumbnail = images.stream()
                 .filter(img -> Objects.equals(img.getId(), newThumbnailImageId))
                 .findFirst()
@@ -288,7 +288,7 @@ public class Product {
     }
 
     // 상품정보 확인
-    private void validate(String title, int price) {
+    private void validate(String title, Integer price) {
         if (title == null || title.isBlank()) {
             throw new IllegalArgumentException("상품명은 필수입니다.");
         }

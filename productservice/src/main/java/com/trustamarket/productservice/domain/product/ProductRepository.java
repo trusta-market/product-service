@@ -16,7 +16,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     @EntityGraph(attributePaths = {"images"})
     @Query("select p from Product p where p.id = :id")
-    Optional<Product> findByIdWithImages(@Param("id") Long id);
+    Optional<Product> findByIdWithImages(@Param("id") UUID id);
 
     // 특정 판매자의 모든 판매 목록
     Page<Product> findBySellerId(UUID sellerId, Pageable pageable);
