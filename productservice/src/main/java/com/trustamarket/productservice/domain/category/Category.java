@@ -13,7 +13,7 @@ import java.util.UUID;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Category {
     @Id // 3. PK(기본키) 설정도 확인 필요
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
     private String name;
@@ -24,17 +24,24 @@ public class Category {
 
     private int depth;
     private int displayOrder;
-    private int highValueThreshold;  // 카테고리별 고가 기준 금액
+    private Integer highValueThreshold;  // 카테고리별 고가 기준 금액
 
     @Builder
     public Category(UUID id, String name, Category parent,
-                    int depth, int displayOrder, int highValueThreshold) {
+                    int depth, int displayOrder, Integer highValueThreshold) {
         this.id = id;
         this.name = name;
         this.parent = parent;
         this.depth = depth;
         this.displayOrder = displayOrder;
         this.highValueThreshold = highValueThreshold;
+    }
+
+    public int getEffectiveThreshold() {
+        if (this.highValueThreshold != null) {
+            return this.highValueThreshold;
+        }
+        return CategoryThreshold.getThreshold(this.name);
     }
 
     // 최상위 카테고리 여부 확인

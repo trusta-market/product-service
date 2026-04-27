@@ -20,7 +20,7 @@ public class Product {
     private static final int MAX_TITLE_LENGTH = 100;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @EqualsAndHashCode.Include
     private UUID id;
 
