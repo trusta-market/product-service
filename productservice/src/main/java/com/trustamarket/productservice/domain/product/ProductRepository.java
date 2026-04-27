@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
@@ -18,10 +19,10 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     Optional<Product> findByIdWithImages(@Param("id") Long id);
 
     // 특정 판매자의 모든 판매 목록
-    Page<Product> findBySellerId(Long sellerId, Pageable pageable);
+    Page<Product> findBySellerId(UUID sellerId, Pageable pageable);
 
     //특정 카테고리 판매 목록
-    Page<Product> findByCategoryId(Long categoryId, Pageable pageable);
+    Page<Product> findByCategoryId(UUID categoryId, Pageable pageable);
 
     // 최근 등록일 기준 조회
     @EntityGraph(attributePaths = {"images"})

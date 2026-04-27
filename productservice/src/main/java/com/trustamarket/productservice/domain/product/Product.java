@@ -7,10 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Entity
 @Getter
@@ -25,10 +22,10 @@ public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @EqualsAndHashCode.Include
-    private Long id;
+    private UUID id;
 
     @Column(nullable = false)
-    private Long sellerId;
+    private UUID sellerId;
 
     @Column(nullable = false)
     private Long categoryId;
@@ -58,7 +55,7 @@ public class Product {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    private Product(Long sellerId, Long categoryId, String title,
+    private Product(UUID sellerId, Long categoryId, String title,
                     String description, int price, ProductGrade grade, boolean requiresInspection) {
         validate(title, price);
         this.sellerId = sellerId;
@@ -80,15 +77,15 @@ public class Product {
 
 
     // 상품등록
-    public static Product create(Long sellerId, Long categoryId, String title,
+    public static Product create(UUID sellerId, Long categoryId, String title,
                                  String description, int price, ProductGrade grade, boolean requiresInspection) {
         return new Product(sellerId, categoryId, title, description, price, grade, requiresInspection);
     }
 
     // db에 저장디어있던 id나 등록시간 같은걸 다시 살려낸다
-    public static Product restore(Long id, Long sellerId, Long categoryId, String title,
+    public static Product restore(UUID id, UUID sellerId, Long categoryId, String title,
                                   String description, int price, ProductGrade grade,
-                                  ProductStatus status,InspectionStatus inspectionStatus, List<ProductImage> images,
+                                  ProductStatus status, InspectionStatus inspectionStatus, List<ProductImage> images,
                                   LocalDateTime createdAt, LocalDateTime updatedAt) {
         Product product = new Product();
         product.id = id;

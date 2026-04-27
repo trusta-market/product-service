@@ -10,6 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.Objects;
+import java.util.UUID;
 
 @Entity
 @Getter
@@ -19,13 +20,13 @@ public class ProductImage {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private UUID id;
     
     private String imageUrl;
     private int sortOrder;
     private boolean isThumbnail;
 
-    private ProductImage(Long id, String imageUrl, int sortOrder, boolean isThumbnail) {
+    private ProductImage(UUID id, String imageUrl, int sortOrder, boolean isThumbnail) {
         validate(imageUrl);
         this.id = id;
         this.imageUrl = imageUrl;
@@ -40,7 +41,7 @@ public class ProductImage {
     }
 
     // db에 저장된 정보를 가져와서 객체로 만들때 사용
-    public static ProductImage of(Long id, String imageUrl, int sortOrder, boolean isThumbnail) {
+    public static ProductImage of(UUID id, String imageUrl, int sortOrder, boolean isThumbnail) {
         return new ProductImage(id, imageUrl, sortOrder, isThumbnail);
     }
 
