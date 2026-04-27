@@ -205,6 +205,9 @@ public class Product {
 
     // 이미지 삭제
     public void removeImage(Long imageId) {
+        if (imageId == null) {
+            throw new IllegalArgumentException("삭제하려는 이미지 ID는 null일 수 없습니다.");
+        }
         boolean removed = this.images.removeIf(img -> Objects.equals(img.getId(), imageId));
         if (!removed) {
             throw new IllegalArgumentException("존재하지 않는 이미지입니다. imageId: " + imageId);
