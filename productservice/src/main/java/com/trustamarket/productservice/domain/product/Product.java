@@ -218,9 +218,9 @@ public class Product {
     }
 
     // 사진 순서 수정
-    public void reorderImages(List<Long> imageIdsSortedOrder) {
+    public void reorderImages(List<UUID> imageIdsSortedOrder) {
         for (int i = 0; i < imageIdsSortedOrder.size(); i++) {
-            Long imageId = imageIdsSortedOrder.get(i);
+            UUID imageId = imageIdsSortedOrder.get(i);
             int order = i;
             this.images.stream()
                     .filter(img -> Objects.equals(img.getId(), imageId))
