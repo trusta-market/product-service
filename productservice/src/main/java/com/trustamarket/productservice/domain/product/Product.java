@@ -11,7 +11,7 @@ import java.util.*;
 
 @Entity
 @Getter
-@Table(name = "p_Products")
+@Table(name = "p_products")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Product {
