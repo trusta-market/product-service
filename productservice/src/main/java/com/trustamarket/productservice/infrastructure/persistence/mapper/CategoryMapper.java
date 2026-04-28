@@ -41,7 +41,6 @@ public class CategoryMapper {
             if (parentId == null) {
                 throw new IllegalArgumentException("부모 카테고리 엔티티를 생성하려면 반드시 ID가 필요합니다.");
             }
-
             parentEntity = CategoryJpaEntity.builder()
                     .id(parentId)
                     .build();
