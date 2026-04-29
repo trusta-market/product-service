@@ -17,8 +17,11 @@ public class ProductMapper {
     public ProductJpaEntity toJpaEntity(Product product) {
         if (product == null) return null;
 
-        return ProductJpaEntity.builder()
-                .id(product.getId())
+        if (product.getSellerId() == null || product.getCategoryId() == null) {
+            throw new IllegalArgumentException("판매자 ID와 카테고리 ID는 필수입니다.");
+        }
+
+        var builder = ProductJpaEntity.builder()
                 .sellerId(product.getSellerId())
                 .categoryId(product.getCategoryId())
                 .title(product.getTitle())
@@ -29,8 +32,13 @@ public class ProductMapper {
                 .inspectionStatus(product.getInspectionStatus())
                 .images(toImageJpaEntities(product.getImages()))
                 .createdAt(product.getCreatedAt())
-                .updatedAt(product.getUpdatedAt())
-                .build();
+                .updatedAt(product.getUpdatedAt());
+
+        if (product.getId() != null) {
+            builder.id(product.getId());
+        }
+
+        return builder.build();
     }
 
     // JpaEntity → Domain
@@ -57,12 +65,20 @@ public class ProductMapper {
         if (images == null) return new ArrayList<>(); // null 방어 코드
 
         return images.stream()
-                .map(img -> ProductImageJpaEntity.builder()
-                        .id(img.getId())
-                        .imageUrl(img.getImageUrl())
-                        .sortOrder(img.getSortOrder())
-                        .isThumbnail(img.isThumbnail())
-                        .build())
+                .map(img -> {
+                    // 1. 빌더를 변수로 생성 (상품과 동일한 방식)
+                    var imgBuilder = ProductImageJpaEntity.builder()
+                            .imageUrl(img.getImageUrl())
+                            .sortOrder(img.getSortOrder())
+                            .isThumbnail(img.isThumbnail());
+
+                    // 2. 이미지 ID가 있을 때만(즉, 수정 시에만) ID를 세팅
+                    if (img.getId() != null) {
+                        imgBuilder.id(img.getId());
+                    }
+
+                    return imgBuilder.build();
+                })
                 .collect(Collectors.toList());
     }
 
