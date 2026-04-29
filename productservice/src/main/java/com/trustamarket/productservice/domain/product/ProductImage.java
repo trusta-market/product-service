@@ -45,6 +45,11 @@ public class ProductImage {
         return new ProductImage(id, imageUrl, sortOrder, isThumbnail);
     }
 
+    // db 엔티티로부터 도메인 객체를 restore하기 위한 메서드
+    public static ProductImage restore(UUID id, String imageUrl, int sortOrder, boolean isThumbnail) {
+        return new ProductImage(id, imageUrl, sortOrder, isThumbnail);
+    }
+
     // 사진 순서 변경
     public void changeSortOrder(int sortOrder) {
         this.sortOrder = sortOrder;
