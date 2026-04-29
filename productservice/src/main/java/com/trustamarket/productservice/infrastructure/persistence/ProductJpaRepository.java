@@ -17,8 +17,10 @@ public interface ProductJpaRepository extends JpaRepository<ProductJpaEntity, UU
     @EntityGraph(attributePaths = {"images"})
     List<ProductJpaEntity> findTop10ByOrderByCreatedAtDesc();
 
+    @EntityGraph(attributePaths = {"images"})
     Page<ProductJpaEntity> findBySellerIdOrderByCreatedAtDesc(UUID sellerId, Pageable pageable);
 
+    @EntityGraph(attributePaths = {"images"})
     Page<ProductJpaEntity> findByCategoryIdAndStatusOrderByCreatedAtDesc(
             UUID categoryId,
             com.trustamarket.productservice.domain.product.ProductStatus status,
