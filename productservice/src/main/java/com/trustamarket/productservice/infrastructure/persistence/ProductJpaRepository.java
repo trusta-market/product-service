@@ -1,15 +1,14 @@
 package com.trustamarket.productservice.infrastructure.persistence;
 
-import com.trustamarket.productservice.domain.product.InspectionStatus;
-import com.trustamarket.productservice.domain.product.Product;
-import com.trustamarket.productservice.domain.product.ProductStatus;
 import com.trustamarket.productservice.infrastructure.persistence.entity.ProductJpaEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.lang.NonNull;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface ProductJpaRepository extends JpaRepository<ProductJpaEntity, UUID> {
@@ -26,4 +25,9 @@ public interface ProductJpaRepository extends JpaRepository<ProductJpaEntity, UU
             com.trustamarket.productservice.domain.product.ProductStatus status,
             Pageable pageable
     );
+
+    @Override
+    @NonNull
+    @EntityGraph(attributePaths = {"images"})
+    Optional<ProductJpaEntity> findById(@NonNull UUID id);
 }
