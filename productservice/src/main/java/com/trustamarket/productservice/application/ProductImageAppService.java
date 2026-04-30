@@ -34,8 +34,14 @@ public class ProductImageAppService {
             throw new ProductAccessDeniedException();
         }
 
+        // 동시성 문제를 피하기 위한 index
+        int nextIndex = product.getImages().size();
+
+        // 파일 업로드를 트랜잭션 이후로 미루기 위해 파일 정보를 먼저 전달만 하고 실제 파일 업로드는 별도로 처리
         String imageUrl = productImagePort.upload(file, IMAGE_DIRECTORY);
-        product.addImage(ProductImage.create(imageUrl, product.getImages().size(),false));
+
+        // 상품 이미지 추가(domain 내에서 처리)
+        product.addImage(ProductImage.create(imageUrl, nextIndex, false));
 
         return productRepository.save(product);
     }
