@@ -4,6 +4,7 @@ import com.trustamarket.productservice.application.exception.CategoryNotFoundExc
 import com.trustamarket.productservice.application.exception.InvalidStatusTransitionException;
 import com.trustamarket.productservice.application.exception.ProductAccessDeniedException;
 import com.trustamarket.productservice.application.exception.ProductNotFoundException;
+import com.trustamarket.productservice.application.exception.errorcode.ProductErrorCode;
 import com.trustamarket.productservice.application.port.ProductEventPublishPort;
 import com.trustamarket.productservice.application.port.ProductSearchPort;
 import com.trustamarket.productservice.domain.category.Category;
@@ -34,7 +35,7 @@ public class ProductCommandService {
     public Product create(UUID sellerId, String title, String description, Integer price, UUID categoryId) {
         // 1. 카테고리 확인
         categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new CategoryNotFoundException(categoryId));
+                .orElseThrow(() -> new CategoryNotFoundException(ProductErrorCode.CATEGORY_NOT_FOUND));
 
         // grade: 초기에는 등급이 없으므로 null 전송
         // requiresInspection: 일단 기본값으로 true(검수 필요)를 설정 (프로젝트 정책에 따라 변경)
@@ -58,14 +59,13 @@ public class ProductCommandService {
                           String description, int price, UUID categoryId) {
 
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException(productId));
+                .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
 
         if (!product.isOwnedBy(sellerId)) {
-            throw new ProductAccessDeniedException();
-        }
+            throw new ProductAccessDeniedException(ProductErrorCode.PRODUCT_ACCESS_DENIED);        }
 
         categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new CategoryNotFoundException(categoryId));
+                .orElseThrow(() -> new CategoryNotFoundException(ProductErrorCode.CATEGORY_NOT_FOUND));
 
         product.update(title, description, price, categoryId);
         Product saved = productRepository.save(product);
@@ -78,11 +78,10 @@ public class ProductCommandService {
     // 상품 삭제
     public void deleteProduct(UUID productId, UUID sellerId) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException(productId));
+                .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
 
         if (!product.isOwnedBy(sellerId)) {
-            throw new ProductAccessDeniedException();
-        }
+            throw new ProductAccessDeniedException(ProductErrorCode.PRODUCT_ACCESS_DENIED);        }
 
         productRepository.deleteById(productId);
         productSearchPort.delete(productId);
@@ -92,24 +91,23 @@ public class ProductCommandService {
     // 상품 상태 변경
     public Product changeStatus(UUID productId, ProductStatus newStatus, UUID sellerId) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException(productId));
+                .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
 
         if (!product.isOwnedBy(sellerId)) {
-            throw new ProductAccessDeniedException();
-        }
+            throw new ProductAccessDeniedException(ProductErrorCode.PRODUCT_ACCESS_DENIED);        }
 
         productDomainService.validateStatusTransition(product.getStatus(), newStatus);
 
         switch (newStatus) {
             case RESERVED -> {
                 if (!product.isSaleable()) {      // ← isSaleable() 활성화
-                    throw new InvalidStatusTransitionException();
+                    throw new InvalidStatusTransitionException(ProductErrorCode.INVALID_STATUS_TRANSITION);
                 }
                 product.reserve();
             }
             case SOLD_OUT -> product.completeSale();
             case ON_SALE  -> product.cancelReservation();
-            default       -> throw new InvalidStatusTransitionException();
+            default       -> throw new InvalidStatusTransitionException(ProductErrorCode.INVALID_STATUS_TRANSITION);
         }
 
         return productRepository.save(product);
@@ -118,7 +116,7 @@ public class ProductCommandService {
     // 검수 시작 (검수자용)
     public Product startInspection(UUID productId) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException(productId));
+                .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
 
         product.startInspection();
         return productRepository.save(product);
@@ -127,7 +125,7 @@ public class ProductCommandService {
     // 검수 완료 처리 — 등급 확정
     public Product completeInspection(UUID productId, ProductGrade inspectedGrade) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException(productId));
+                .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
 
         product.completeInspection(inspectedGrade);
         Product saved = productRepository.save(product);
@@ -140,7 +138,7 @@ public class ProductCommandService {
     // 검수 불합격 처리 (검수자용)
     public Product failInspection(UUID productId) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException(productId));
+                .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
 
         product.failInspection();
         return productRepository.save(product);

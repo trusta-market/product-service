@@ -2,6 +2,7 @@ package com.trustamarket.productservice.application;
 
 import com.trustamarket.productservice.application.exception.ProductAccessDeniedException;
 import com.trustamarket.productservice.application.exception.ProductNotFoundException;
+import com.trustamarket.productservice.application.exception.errorcode.ProductErrorCode;
 import com.trustamarket.productservice.application.port.ProductImagePort;
 import com.trustamarket.productservice.domain.product.Product;
 import com.trustamarket.productservice.domain.product.ProductImage;
@@ -28,14 +29,13 @@ public class ProductImageAppService {
     @Transactional
     public Product addImage(UUID productId, UUID sellerId, MultipartFile file) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException(productId));
+                .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
 
         if (!product.isOwnedBy(sellerId)) {
-            throw new ProductAccessDeniedException();
-        }
+            throw new ProductAccessDeniedException(ProductErrorCode.PRODUCT_ACCESS_DENIED);        }
 
-        // 동시성 문제를 피하기 위한 index
-        int nextIndex = product.getImages().size();
+        // getActiveImageCount()를 사용하여 삭제되지 않은 이미지 기준 인덱스 생성
+        int nextIndex = product.getActiveImageCount();
 
         // 파일 업로드를 트랜잭션 이후로 미루기 위해 파일 정보를 먼저 전달만 하고 실제 파일 업로드는 별도로 처리
         String imageUrl = productImagePort.upload(file, IMAGE_DIRECTORY);
@@ -50,16 +50,17 @@ public class ProductImageAppService {
     @Transactional
     public Product removeImage(UUID productId, UUID sellerId, UUID imageId) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException(productId));
+                .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
 
         if (!product.isOwnedBy(sellerId)) {
-            throw new ProductAccessDeniedException();
-        }
+            throw new ProductAccessDeniedException(ProductErrorCode.PRODUCT_ACCESS_DENIED);        }
 
+        // 외부 저장소 삭제 전, 대상 이미지가 유효한지 확인
         product.getImages().stream()
                 .filter(img -> img.getId().equals(imageId))
+                //.map(ProductImage::getImageUrl)
                 .findFirst()
-                .ifPresent(img -> productImagePort.delete(img.getImageUrl()));
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않거나 이미 삭제된 이미지입니다."));
 
         product.removeImage(imageId);
         return productRepository.save(product);
@@ -69,11 +70,10 @@ public class ProductImageAppService {
     @Transactional
     public Product changeThumbnail(UUID productId, UUID sellerId, UUID imageId) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException(productId));
+                .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
 
         if (!product.isOwnedBy(sellerId)) {
-            throw new ProductAccessDeniedException();
-        }
+            throw new ProductAccessDeniedException(ProductErrorCode.PRODUCT_ACCESS_DENIED);        }
 
         product.changeThumbnail(imageId);
         return productRepository.save(product);
@@ -83,11 +83,10 @@ public class ProductImageAppService {
     @Transactional
     public Product reorderImages(UUID productId, UUID sellerId, List<UUID> imageIds) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException(productId));
+                .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
 
         if (!product.isOwnedBy(sellerId)) {
-            throw new ProductAccessDeniedException();
-        }
+            throw new ProductAccessDeniedException(ProductErrorCode.PRODUCT_ACCESS_DENIED);        }
 
         product.reorderImages(imageIds);
         return productRepository.save(product);

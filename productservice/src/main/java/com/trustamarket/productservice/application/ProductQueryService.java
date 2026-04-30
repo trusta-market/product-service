@@ -1,6 +1,7 @@
 package com.trustamarket.productservice.application;
 
 import com.trustamarket.productservice.application.exception.ProductNotFoundException;
+import com.trustamarket.productservice.application.exception.errorcode.ProductErrorCode;
 import com.trustamarket.productservice.domain.product.Product;
 import com.trustamarket.productservice.domain.product.ProductRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,8 +22,8 @@ public class ProductQueryService {
 
     // 상품 단건 조회 (이미지 포함)
     public Product findById(UUID productId) {
-        return productRepository.findByIdWithImages(productId)
-                .orElseThrow(() -> new ProductNotFoundException(productId));
+        return productRepository.findById(productId)
+                .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
     }
 
     // 판매자별 상품 목록
