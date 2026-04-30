@@ -99,11 +99,7 @@ public class ProductCommandService {
             throw new ProductAccessDeniedException();
         }
 
-        try {
-            productDomainService.validateStatusTransition(product.getStatus(), newStatus);
-        } catch (IllegalStateException e) {
-            throw new InvalidStatusTransitionException();
-        }
+        productDomainService.validateStatusTransition(product.getStatus(), newStatus);
 
         switch (newStatus) {
             case RESERVED -> {
