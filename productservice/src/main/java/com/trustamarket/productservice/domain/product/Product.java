@@ -144,6 +144,11 @@ public class Product {
         onUpdate();
     }
 
+    // 상품을 판매 중 상태로 전환 (검수 완료 후 최초 판매 또는 시스템 강제 전환 시 사용)
+    public void reopenForSale() {
+        this.status = ProductStatus.ON_SALE;
+    }
+
     // 검수 시작 (검수자가 상품 수령 후)
     public void startInspection() {
         if (this.inspectionStatus != InspectionStatus.PENDING) {

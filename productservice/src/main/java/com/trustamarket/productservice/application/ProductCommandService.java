@@ -106,8 +106,15 @@ public class ProductCommandService {
                 product.reserve();
             }
             case SOLD_OUT -> product.completeSale();
-            case ON_SALE  -> product.cancelReservation();
-            default       -> throw new InvalidStatusTransitionException(ProductErrorCode.INVALID_STATUS_TRANSITION);
+            case ON_SALE  -> {
+                if (product.getStatus() == ProductStatus.RESERVED) {
+                    product.cancelReservation(); // 예약 중일 때만 예약 취소 로직 실행
+                } else {
+                    // 예약 상태가 아니라면 도메인 모델에 정의된 일반적인 판매 시작 메서드나 상태 변경 로직 호출
+                    product.reopenForSale();
+                }
+            }
+            default -> throw new InvalidStatusTransitionException(ProductErrorCode.INVALID_STATUS_TRANSITION);
         }
 
         return productRepository.save(product);
