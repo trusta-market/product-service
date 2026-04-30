@@ -55,8 +55,7 @@ public class ProductCommandService {
 
     // 상품 수정
     public Product update(UUID productId, UUID sellerId, String title,
-                          String description, int price,
-                          ProductGrade grade, UUID categoryId) {
+                          String description, int price, UUID categoryId) {
 
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException(productId));
@@ -68,7 +67,7 @@ public class ProductCommandService {
         categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new CategoryNotFoundException(categoryId));
 
-        product.update(title, description, price, grade, categoryId);
+        product.update(title, description, price, categoryId);
         Product saved = productRepository.save(product);
 
         productSearchPort.index(saved);

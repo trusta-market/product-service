@@ -106,12 +106,11 @@ public class Product {
 
     // 제목, 가격 같은 상세내용 수정
     public void update(String title, String description, Integer price,
-                       ProductGrade grade, UUID categoryId) {
+                       UUID categoryId) {
         validate(title, price);
         this.title = title;
         this.description = description;
         this.price = price;
-        this.grade = grade;
         this.categoryId = categoryId;
         onUpdate();
     }
