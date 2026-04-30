@@ -15,7 +15,9 @@ public enum ProductErrorCode implements ErrorCodeSpec {
     INVALID_STATUS_TRANSITION("PRODUCT_004", HttpStatus.BAD_REQUEST, "유효하지 않은 상태 전이입니다.", null),
 
     IMAGE_NOT_FOUND("PRODUCT_005", HttpStatus.NOT_FOUND, "존재하지 않거나 이미 삭제된 이미지입니다.", null),
-    IMAGE_COUNT_EXCEEDED("PRODUCT_006", HttpStatus.BAD_REQUEST, "이미지는 최대 10장까지 등록 가능합니다.", null);
+    IMAGE_COUNT_EXCEEDED("PRODUCT_006", HttpStatus.BAD_REQUEST, "이미지는 최대 10장까지 등록 가능합니다.", null),
+    // ProductErrorCode.java에 추가
+    INVALID_IMAGE_URL("PRODUCT_007", HttpStatus.BAD_REQUEST, "이미지 URL은 필수입니다.", "imageUrl");
 
     private final String code;
     private final HttpStatus status;

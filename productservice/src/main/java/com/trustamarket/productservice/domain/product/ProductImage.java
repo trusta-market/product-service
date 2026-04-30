@@ -1,5 +1,7 @@
 package com.trustamarket.productservice.domain.product;
 
+import com.trustamarket.productservice.application.exception.InvalidImageUrlException;
+import com.trustamarket.productservice.application.exception.errorcode.ProductErrorCode;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -79,7 +81,7 @@ public class ProductImage {
     // 이미지 url 존재 여부 확인
     private void validate(String imageUrl) {
         if (imageUrl == null || imageUrl.isBlank()) {
-            throw new IllegalArgumentException("이미지 URL은 비어있을 수 없습니다.");
+            throw new InvalidImageUrlException(ProductErrorCode.INVALID_IMAGE_URL);
         }
     }
 }
