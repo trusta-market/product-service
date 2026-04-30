@@ -1,6 +1,7 @@
 package com.trustamarket.productservice.application;
 
 import com.trustamarket.productservice.application.exception.CategoryNotFoundException;
+import com.trustamarket.productservice.application.exception.errorcode.ProductErrorCode;
 import com.trustamarket.productservice.domain.category.Category;
 import com.trustamarket.productservice.domain.category.CategoryRepository;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +36,7 @@ public class CategoryService {
     // 단건 조회
     public Category findById(UUID categoryId) {
         return categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new CategoryNotFoundException(categoryId));
+                .orElseThrow(() -> new CategoryNotFoundException(ProductErrorCode.CATEGORY_NOT_FOUND));
     }
 
     // 카테고리 등록 (관리자용)
@@ -44,7 +45,7 @@ public class CategoryService {
                            int displayOrder, int highValueThreshold) {
         Category parent = parentId != null
                 ? categoryRepository.findById(parentId)
-                  .orElseThrow(() -> new CategoryNotFoundException(parentId))
+                  .orElseThrow(() -> new CategoryNotFoundException(ProductErrorCode.CATEGORY_NOT_FOUND))
                 : null;
 
         return categoryRepository.save(
@@ -62,7 +63,7 @@ public class CategoryService {
     @Transactional
     public void delete(UUID categoryId) {
         categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new CategoryNotFoundException(categoryId));
+                .orElseThrow(() -> new CategoryNotFoundException(ProductErrorCode.CATEGORY_NOT_FOUND));
         categoryRepository.deleteById(categoryId);
     }
 }
