@@ -1,13 +1,14 @@
 package com.trustamarket.productservice.application;
 
+import com.trustamarket.productservice.application.event.ProductCreatedEvent;
+import com.trustamarket.productservice.application.event.ProductDeletedEvent;
+import com.trustamarket.productservice.application.event.ProductInspectedEvent;
+import com.trustamarket.productservice.application.event.ProductUpdatedEvent;
 import com.trustamarket.productservice.application.exception.CategoryNotFoundException;
 import com.trustamarket.productservice.application.exception.InvalidStatusTransitionException;
 import com.trustamarket.productservice.application.exception.ProductAccessDeniedException;
 import com.trustamarket.productservice.application.exception.ProductNotFoundException;
 import com.trustamarket.productservice.application.exception.errorcode.ProductErrorCode;
-import com.trustamarket.productservice.application.port.ProductEventPublishPort;
-import com.trustamarket.productservice.application.port.ProductSearchPort;
-import com.trustamarket.productservice.domain.category.Category;
 import com.trustamarket.productservice.domain.category.CategoryRepository;
 import com.trustamarket.productservice.domain.product.Product;
 import com.trustamarket.productservice.domain.product.ProductDomainService;
@@ -15,6 +16,7 @@ import com.trustamarket.productservice.domain.product.ProductGrade;
 import com.trustamarket.productservice.domain.product.ProductRepository;
 import com.trustamarket.productservice.domain.product.ProductStatus;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,8 +30,7 @@ public class ProductCommandService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final ProductDomainService productDomainService;
-    private final ProductSearchPort productSearchPort;
-    private final ProductEventPublishPort productEventPublishPort;
+    private final ApplicationEventPublisher eventPublisher;
 
     // 상품 등록
     public Product create(UUID sellerId, String title, String description, Integer price, UUID categoryId) {
@@ -50,7 +51,7 @@ public class ProductCommandService {
         );
 
         Product savedProduct = productRepository.save(product);
-        productEventPublishPort.publishProductCreated(savedProduct);
+        eventPublisher.publishEvent(new ProductCreatedEvent(savedProduct));
         return savedProduct;
     }
 
@@ -70,7 +71,7 @@ public class ProductCommandService {
         product.update(title, description, price, categoryId);
         Product saved = productRepository.save(product);
 
-        productSearchPort.index(saved);
+        eventPublisher.publishEvent(new ProductUpdatedEvent(saved));
 
         return saved;
     }
@@ -84,8 +85,7 @@ public class ProductCommandService {
             throw new ProductAccessDeniedException(ProductErrorCode.PRODUCT_ACCESS_DENIED);        }
 
         productRepository.deleteById(productId);
-        productSearchPort.delete(productId);
-        productEventPublishPort.publishProductDeleted(productId);
+        eventPublisher.publishEvent(new ProductDeletedEvent(productId));
     }
 
     // 상품 상태 변경
@@ -137,7 +137,7 @@ public class ProductCommandService {
         product.completeInspection(inspectedGrade);
         Product saved = productRepository.save(product);
 
-        productSearchPort.index(saved);
+        eventPublisher.publishEvent(new ProductInspectedEvent(saved));
 
         return saved;
     }
