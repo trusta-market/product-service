@@ -33,28 +33,30 @@ public class ProductImage {
     private boolean isDeleted = false;
     private LocalDateTime deletedAt;
 
-    private ProductImage(UUID id, String imageUrl, int sortOrder, boolean isThumbnail) {
+    private ProductImage(UUID id, String imageUrl, int sortOrder, boolean isThumbnail, boolean isDeleted, LocalDateTime deletedAt) {
         validate(imageUrl);
         this.id = id;
         this.imageUrl = imageUrl;
         this.sortOrder = sortOrder;
         this.isThumbnail = isThumbnail;
+        this.isDeleted = isDeleted; // 삭제 상태 복원
+        this.deletedAt = deletedAt;
     }
 
 
     // 사진 신규 등록
     public static ProductImage create(String imageUrl, int sortOrder, boolean isThumbnail) {
-        return new ProductImage(null, imageUrl, sortOrder, isThumbnail);
+        return new ProductImage(null, imageUrl, sortOrder, isThumbnail, false, null);
     }
 
     // db에 저장된 정보를 가져와서 객체로 만들때 사용
     public static ProductImage of(UUID id, String imageUrl, int sortOrder, boolean isThumbnail) {
-        return new ProductImage(id, imageUrl, sortOrder, isThumbnail);
+        return new ProductImage(id, imageUrl, sortOrder, isThumbnail,false, null);
     }
 
     // db 엔티티로부터 도메인 객체를 restore하기 위한 메서드
-    public static ProductImage restore(UUID id, String imageUrl, int sortOrder, boolean isThumbnail) {
-        return new ProductImage(id, imageUrl, sortOrder, isThumbnail);
+    public static ProductImage restore(UUID id, String imageUrl, int sortOrder, boolean isThumbnail, boolean isDeleted, LocalDateTime deletedAt) {
+        return new ProductImage(id, imageUrl, sortOrder, isThumbnail,isDeleted, deletedAt);
     }
 
     // Soft Delete 실행 메서드 추가
