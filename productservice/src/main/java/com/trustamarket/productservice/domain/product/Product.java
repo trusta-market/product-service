@@ -254,9 +254,11 @@ public class Product {
     // 대표이미지 확인
     public ProductImage getThumbnail() {
         return this.images.stream()
-                .filter(ProductImage::isThumbnail)
+                // 삭제되지 않은 이미지 중 썸네일로 지정된 것을 확인
+                .filter(img -> !img.isDeleted() && img.isThumbnail())
                 .findFirst()
-                .orElse(this.images.isEmpty() ? null : this.images.get(0));
+                // 지정된 썸네일이 없다면, 삭제되지 않은 첫 번째 이미지를 반환
+                .orElseGet(() -> findFirstActiveImage().orElse(null));
     }
 
     // 대표이미지 취소 및 재설정
@@ -275,7 +277,6 @@ public class Product {
         // 새로운 썸네일 지정
         newThumbnail.markAsThumbnail();
 
-        onUpdate();
         onUpdate();
     }
 
