@@ -9,6 +9,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -25,6 +26,10 @@ public class ProductImage {
     private String imageUrl;
     private int sortOrder;
     private boolean isThumbnail;
+
+    // Soft Delete를 위한 필드 추가
+    private boolean isDeleted = false;
+    private LocalDateTime deletedAt;
 
     private ProductImage(UUID id, String imageUrl, int sortOrder, boolean isThumbnail) {
         validate(imageUrl);
@@ -48,6 +53,12 @@ public class ProductImage {
     // db 엔티티로부터 도메인 객체를 restore하기 위한 메서드
     public static ProductImage restore(UUID id, String imageUrl, int sortOrder, boolean isThumbnail) {
         return new ProductImage(id, imageUrl, sortOrder, isThumbnail);
+    }
+
+    // Soft Delete 실행 메서드 추가
+    public void delete() {
+        this.isDeleted = true;
+        this.deletedAt = LocalDateTime.now();
     }
 
     // 사진 순서 변경
