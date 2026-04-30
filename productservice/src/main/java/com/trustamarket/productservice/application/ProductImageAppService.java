@@ -1,5 +1,6 @@
 package com.trustamarket.productservice.application;
 
+import com.trustamarket.productservice.application.exception.ImageNotFoundException;
 import com.trustamarket.productservice.application.exception.ProductAccessDeniedException;
 import com.trustamarket.productservice.application.exception.ProductNotFoundException;
 import com.trustamarket.productservice.application.exception.errorcode.ProductErrorCode;
@@ -56,14 +57,13 @@ public class ProductImageAppService {
             throw new ProductAccessDeniedException(ProductErrorCode.PRODUCT_ACCESS_DENIED);        }
 
         // 외부 저장소 삭제 전, 대상 이미지가 유효한지 확인
-        product.getImages().stream()
-                .filter(img -> img.getId().equals(imageId))
-                //.map(ProductImage::getImageUrl)
+        ProductImage target = product.getImages().stream()
+                .filter(img -> !img.isDeleted() && img.getId().equals(imageId))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않거나 이미 삭제된 이미지입니다."));
-
+                .orElseThrow(() -> new ImageNotFoundException(ProductErrorCode.IMAGE_NOT_FOUND)); // 여기서 에러나면 저장소 삭제는 실행 불가
         product.removeImage(imageId);
-        return productRepository.save(product);
+        productRepository.save(product);
+        return product;
     }
 
     // 대표이미지 변경

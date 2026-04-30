@@ -1,5 +1,7 @@
 package com.trustamarket.productservice.domain.product;
 
+import com.trustamarket.productservice.application.exception.ImageNotFoundException;
+import com.trustamarket.productservice.application.exception.errorcode.ProductErrorCode;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
@@ -208,7 +210,7 @@ public class Product {
         ProductImage targetImage = this.images.stream()
                 .filter(img -> Objects.equals(img.getId(), imageId) && !img.isDeleted())
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않거나 이미 삭제된 이미지입니다. imageId: " + imageId));
+                .orElseThrow(() -> new ImageNotFoundException(ProductErrorCode.IMAGE_NOT_FOUND));
 
         targetImage.delete(); // ProductImage 엔티티에 추가한 delete() 호출
 
