@@ -90,7 +90,9 @@ public class ProductMapper {
                         e.getId(),
                         e.getImageUrl(),
                         e.getSortOrder(),
-                        e.isThumbnail()
+                        e.isThumbnail(),
+                        e.isDeleted(),   
+                        e.getDeletedAt()
                 ))
                 .collect(Collectors.toList());
     }

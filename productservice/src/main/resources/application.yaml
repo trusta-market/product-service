@@ -1,3 +1,23 @@
+server:
+  port: 18081
+
 spring:
   application:
-    name: productservice
+    name: product-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/product_db
+    username: postgres
+    password: postgres
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+  kafka:
+    bootstrap-servers: <Kafka brokers>
+
+trusta:
+  security:
+    # Gateway 뒤 배치된 서비스에서만 true. false(default) 면 LoginFilter 비활성 → 인증 필요한 엔드포인트는 401.
+    trust-gateway-headers: true

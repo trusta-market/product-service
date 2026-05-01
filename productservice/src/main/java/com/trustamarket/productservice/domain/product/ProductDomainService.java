@@ -1,7 +1,11 @@
 package com.trustamarket.productservice.domain.product;
 
+import com.trustamarket.productservice.application.exception.InvalidStatusTransitionException;
+import com.trustamarket.productservice.application.exception.errorcode.ProductErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
+@Service
 @RequiredArgsConstructor
 public class ProductDomainService {
 
@@ -28,7 +32,7 @@ public class ProductDomainService {
             case SOLD_OUT           -> false;
         };
         if (!valid) {
-            throw new IllegalStateException(current + " → " + next + " 전이는 불가합니다.");
+            throw new InvalidStatusTransitionException(ProductErrorCode.INVALID_STATUS_TRANSITION);
         }
     }
 }

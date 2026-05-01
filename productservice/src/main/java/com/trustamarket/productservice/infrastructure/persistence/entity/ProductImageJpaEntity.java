@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -27,12 +28,21 @@ public class ProductImageJpaEntity {
     @Column(nullable = false)
     private boolean isThumbnail;
 
+    // Soft Delete 상태를 DB에 저장하기 위한 컬럼
+    @Column(nullable = false)
+    private boolean isDeleted = false;
+
+    // 삭제된 시간을 저장하기 위한 컬럼
+    private LocalDateTime deletedAt;
+
     @Builder
     public ProductImageJpaEntity(UUID id, String imageUrl,
-                                 int sortOrder, boolean isThumbnail) {
+                                 int sortOrder, boolean isThumbnail, boolean isDeleted, LocalDateTime deletedAt) {
         this.id = id;
         this.imageUrl = imageUrl;
         this.sortOrder = sortOrder;
         this.isThumbnail = isThumbnail;
+        this.isDeleted = isDeleted;
+        this.deletedAt = deletedAt;
     }
 }

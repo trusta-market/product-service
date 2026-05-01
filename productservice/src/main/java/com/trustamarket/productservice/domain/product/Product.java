@@ -1,5 +1,7 @@
 package com.trustamarket.productservice.domain.product;
 
+import com.trustamarket.productservice.application.exception.ImageNotFoundException;
+import com.trustamarket.productservice.application.exception.errorcode.ProductErrorCode;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
@@ -48,7 +50,7 @@ public class Product {
     @Enumerated(EnumType.STRING)
     private InspectionStatus inspectionStatus;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "product_id")
     private List<ProductImage> images;
 
@@ -106,12 +108,11 @@ public class Product {
 
     // 제목, 가격 같은 상세내용 수정
     public void update(String title, String description, Integer price,
-                       ProductGrade grade, UUID categoryId) {
+                       UUID categoryId) {
         validate(title, price);
         this.title = title;
         this.description = description;
         this.price = price;
-        this.grade = grade;
         this.categoryId = categoryId;
         onUpdate();
     }
@@ -141,6 +142,11 @@ public class Product {
         }
         this.status = ProductStatus.ON_SALE;
         onUpdate();
+    }
+
+    // 상품을 판매 중 상태로 전환 (검수 완료 후 최초 판매 또는 시스템 강제 전환 시 사용)
+    public void reopenForSale() {
+        this.status = ProductStatus.ON_SALE;
     }
 
     // 검수 시작 (검수자가 상품 수령 후)
@@ -183,7 +189,7 @@ public class Product {
 
     // 상품 이미지 추가
     public void addImage(ProductImage image) {
-        if (this.images.size() >= MAX_IMAGE_COUNT) {
+        if (getActiveImageCount() >= MAX_IMAGE_COUNT) {
             throw new IllegalStateException("이미지는 최대 " + MAX_IMAGE_COUNT + "장까지 등록 가능합니다.");
         }
 
@@ -205,13 +211,18 @@ public class Product {
         if (imageId == null) {
             throw new IllegalArgumentException("삭제하려는 이미지 ID는 null일 수 없습니다.");
         }
-        boolean removed = this.images.removeIf(img -> Objects.equals(img.getId(), imageId));
-        if (!removed) {
-            throw new IllegalArgumentException("존재하지 않는 이미지입니다. imageId: " + imageId);
-        }
+        // 1. 리스트에서 이미지를 찾아 삭제 상태로 변경
+        ProductImage targetImage = this.images.stream()
+                .filter(img -> Objects.equals(img.getId(), imageId) && !img.isDeleted())
+                .findFirst()
+                .orElseThrow(() -> new ImageNotFoundException(ProductErrorCode.IMAGE_NOT_FOUND));
 
-        if (!this.images.isEmpty() && getThumbnail() == null) {
-            this.images.get(0).markAsThumbnail();
+        targetImage.delete(); // ProductImage 엔티티에 추가한 delete() 호출
+
+        // 2. 만약 삭제된 이미지가 대표 이미지(Thumbnail)였다면 다른 이미지를 재설정
+        if (targetImage.isThumbnail()) {
+            targetImage.unmarkThumbnail();
+            findFirstActiveImage().ifPresent(ProductImage::markAsThumbnail);
         }
 
         onUpdate();
@@ -248,27 +259,29 @@ public class Product {
     // 대표이미지 확인
     public ProductImage getThumbnail() {
         return this.images.stream()
-                .filter(ProductImage::isThumbnail)
+                // 삭제되지 않은 이미지 중 썸네일로 지정된 것을 확인
+                .filter(img -> !img.isDeleted() && img.isThumbnail())
                 .findFirst()
-                .orElse(this.images.isEmpty() ? null : this.images.get(0));
+                // 지정된 썸네일이 없다면, 삭제되지 않은 첫 번째 이미지를 반환
+                .orElseGet(() -> findFirstActiveImage().orElse(null));
     }
 
     // 대표이미지 취소 및 재설정
     public void changeThumbnail(UUID newThumbnailImageId) {
+        // 삭제되지 않은 이미지 중에서 새로운 대표이미지 탐색
         ProductImage newThumbnail = images.stream()
-                .filter(img -> Objects.equals(img.getId(), newThumbnailImageId))
+                .filter(img -> Objects.equals(img.getId(), newThumbnailImageId) && !img.isDeleted())
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("해당 ID를 가진 이미지가 상품에 존재하지 않습니다."));
+
+        // 기존 유효한 썸네일들 해제
         images.stream()
-                .filter(ProductImage::isThumbnail)
+                .filter(img -> !img.isDeleted() && img.isThumbnail())
                 .forEach(ProductImage::unmarkThumbnail);
-        images.stream()
-                .filter(img -> Objects.equals(img.getId(), newThumbnailImageId))
-                .findFirst()
-                .ifPresentOrElse(
-                        ProductImage::markAsThumbnail,
-                        () -> { throw new IllegalArgumentException("해당 ID를 가진 이미지가 상품에 존재하지 않습니다."); }
-                );
+
+        // 새로운 썸네일 지정
+        newThumbnail.markAsThumbnail();
+
         onUpdate();
     }
 
@@ -279,12 +292,26 @@ public class Product {
 
     // 첫번째 사진을 대표이미지로 설정
     private boolean shouldSetAsThumbnail() {
-        return this.images.isEmpty() || this.images.stream().noneMatch(ProductImage::isThumbnail);
+        return getActiveImageCount() == 0;
     }
 
     // 상품정보 수정시 완료시간 확인
     private void onUpdate() {
         this.updatedAt = LocalDateTime.now();
+    }
+
+    // 삭제되지 않은 유효한 이미지 중 첫 번째 이미지를 찾는 보조 메서드
+    private Optional<ProductImage> findFirstActiveImage() {
+        return this.images.stream()
+                .filter(img -> !img.isDeleted())
+                .findFirst();
+    }
+
+    // 유효한 이미지 개수를 반환하는 보조 메서드
+    public int getActiveImageCount() {
+        return (int) this.images.stream()
+                .filter(img -> !img.isDeleted())
+                .count();
     }
 
     // 상품정보 확인
