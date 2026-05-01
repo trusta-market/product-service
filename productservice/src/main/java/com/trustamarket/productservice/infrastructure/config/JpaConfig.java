@@ -5,9 +5,11 @@ import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 @Configuration
-@RequiredArgsConstructor // Lombok을 사용한다면 필수
+@RequiredArgsConstructor
+@EnableJpaAuditing
 public class JpaConfig {
 
     private final EntityManager entityManager;
