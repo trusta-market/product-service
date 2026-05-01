@@ -11,7 +11,7 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 // indexName: ES에서 이 데이터를 저장할 인덱스 이름
 @Getter
 @Builder
-@Document(indexName = "products")
+@Document(indexName = "products", createIndex = false)
 public class ProductDocument {
 
     @Id

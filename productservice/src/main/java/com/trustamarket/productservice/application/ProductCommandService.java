@@ -20,6 +20,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -33,7 +34,7 @@ public class ProductCommandService {
     private final ApplicationEventPublisher eventPublisher;
 
     // 상품 등록
-    public Product create(UUID sellerId, String title, String description, Integer price, UUID categoryId) {
+    public Product create(UUID sellerId, String title, String description, Integer price, UUID categoryId, List<String> imageUrls) {
         // 1. 카테고리 확인
         categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new CategoryNotFoundException(ProductErrorCode.CATEGORY_NOT_FOUND));
@@ -47,7 +48,8 @@ public class ProductCommandService {
                 description,
                 price,
                 null,   // grade 추가
-                true    // requiresInspection 추가
+                true,
+                imageUrls// requiresInspection 추가
         );
 
         Product savedProduct = productRepository.save(product);
@@ -57,7 +59,7 @@ public class ProductCommandService {
 
     // 상품 수정
     public Product update(UUID productId, UUID sellerId, String title,
-                          String description, int price, UUID categoryId) {
+                          String description, int price, UUID categoryId, List<String> imageUrls) {
 
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
@@ -68,7 +70,7 @@ public class ProductCommandService {
         categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new CategoryNotFoundException(ProductErrorCode.CATEGORY_NOT_FOUND));
 
-        product.update(title, description, price, categoryId);
+        product.update(title, description, price, categoryId, imageUrls);
         Product saved = productRepository.save(product);
 
         eventPublisher.publishEvent(new ProductUpdatedEvent(saved));

@@ -42,7 +42,7 @@ public class ProductImageAppService {
         String imageUrl = productImagePort.upload(file, IMAGE_DIRECTORY);
 
         // 상품 이미지 추가(domain 내에서 처리)
-        product.addImage(ProductImage.create(imageUrl, nextIndex, false));
+        product.addImage(ProductImage.create(product, imageUrl, nextIndex, false));
 
         return productRepository.save(product);
     }

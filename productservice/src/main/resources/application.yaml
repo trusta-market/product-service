@@ -4,20 +4,57 @@ server:
 spring:
   application:
     name: product-service
+  main:
+    allow-bean-definition-overriding: true
+
+  security:
+    user:
+      name: admin
+      password: 1234
+
   datasource:
     url: jdbc:postgresql://localhost:5432/product_db
     username: postgres
     password: postgres
+    driver-class-name: org.postgresql.Driver
+
   jpa:
     hibernate:
       ddl-auto: update
     properties:
       hibernate:
+        show_sql: true
         format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  data:
+    elasticsearch:
+      uris: http://localhost:9200
+
   kafka:
-    bootstrap-servers: <Kafka brokers>
+    bootstrap-servers: localhost:9092
+
+  config:
+    import: "optional:configserver:http://localhost:8888"
+  cloud:
+    config:
+      enabled: true
+    compatibility-verifier:
+      enabled: false
 
 trusta:
   security:
-    # Gateway 뒤 배치된 서비스에서만 true. false(default) 면 LoginFilter 비활성 → 인증 필요한 엔드포인트는 401.
     trust-gateway-headers: true
+
+# --- AWS S3 설정 추가 ---
+cloud:
+  aws:
+    credentials:
+      access-key: ${AWS_ACCESS_KEY}
+      secret-key: ${AWS_SECRET_KEY}
+    region:
+      static: ap-northeast-2
+    stack:
+      auto: false
+    s3:
+      bucket: ${AWS_S3_BUCKET}

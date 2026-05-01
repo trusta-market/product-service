@@ -80,8 +80,18 @@ public class Product {
 
     // 상품등록
     public static Product create(UUID sellerId, UUID categoryId, String title,
-                                 String description, Integer price, ProductGrade grade, boolean requiresInspection) {
-        return new Product(sellerId, categoryId, title, description, price, grade, requiresInspection);
+                                 String description, Integer price, ProductGrade grade, boolean requiresInspection, List<String> imageUrls) {
+        // 1. 기본 정보로 상품 생성
+        Product product = new Product(sellerId, categoryId, title, description, price, grade, requiresInspection);
+
+        // 2. 이미지 URL 리스트가 있다면 ProductImage 객체로 변환하여 추가
+        if (imageUrls != null && !imageUrls.isEmpty()) {
+            for (int i = 0; i < imageUrls.size(); i++) {
+                // ProductImage.create(상품, URL, 순서, 썸네일여부) 형태의 메서드가 필요합니다.
+                product.addImage(ProductImage.create(product, imageUrls.get(i), i, i == 0));
+            }
+        }
+        return product;
     }
 
     // db에 저장디어있던 id나 등록시간 같은걸 다시 살려낸다
@@ -108,12 +118,19 @@ public class Product {
 
     // 제목, 가격 같은 상세내용 수정
     public void update(String title, String description, Integer price,
-                       UUID categoryId) {
+                       UUID categoryId, List<String> imageUrls) {
         validate(title, price);
         this.title = title;
         this.description = description;
         this.price = price;
         this.categoryId = categoryId;
+
+        if (imageUrls != null) {
+            this.images.clear(); // 기존 이미지 초기화 (orphanRemoval=true 설정 시 DB에서도 삭제됨)
+            for (int i = 0; i < imageUrls.size(); i++) {
+                this.addImage(ProductImage.create(this, imageUrls.get(i), i, i == 0));
+            }
+        }
         onUpdate();
     }
 
