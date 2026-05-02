@@ -131,8 +131,8 @@ public class ProductController {
 
     //검수 시작 (검수자 권한 필요 기능)
     @PatchMapping("/{productId}/inspection/start")
-    public ProductResponse startInspection(@PathVariable UUID productId) {
-        return ProductResponse.from(productCommandService.startInspection(productId));
+    public ProductResponse startInspection(@PathVariable UUID productId, @RequestHeader("X-User-Id")UUID inspectorId) {
+        return ProductResponse.from(productCommandService.startInspection(productId, inspectorId));
     }
 
 
@@ -140,15 +140,16 @@ public class ProductController {
     @PatchMapping("/{productId}/inspection/complete")
     public ProductResponse completeInspection(
             @PathVariable UUID productId,
-            @RequestParam ProductGrade grade
+            @RequestParam ProductGrade grade,
+            @RequestHeader("X-User-Id") UUID inspectorId
     ) {
-        return ProductResponse.from(productCommandService.completeInspection(productId, grade));
+        return ProductResponse.from(productCommandService.completeInspection(productId, grade, inspectorId));
     }
 
 
     //검수 불합격 처리
     @PatchMapping("/{productId}/inspection/fail")
-    public ProductResponse failInspection(@PathVariable UUID productId) {
-        return ProductResponse.from(productCommandService.failInspection(productId));
+    public ProductResponse failInspection(@PathVariable UUID productId, @RequestHeader("X-User-Id") UUID inspectorId) {
+        return ProductResponse.from(productCommandService.failInspection(productId,inspectorId));
     }
 }

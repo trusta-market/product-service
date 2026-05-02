@@ -123,20 +123,20 @@ public class ProductCommandService {
     }
 
     // 검수 시작 (검수자용)
-    public Product startInspection(UUID productId) {
+    public Product startInspection(UUID productId, UUID inspectorId) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
 
-        product.startInspection();
+        product.startInspection(inspectorId);
         return productRepository.save(product);
     }
 
     // 검수 완료 처리 — 등급 확정
-    public Product completeInspection(UUID productId, ProductGrade inspectedGrade) {
+    public Product completeInspection(UUID productId, ProductGrade inspectedGrade, UUID inspectorId) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
 
-        product.completeInspection(inspectedGrade);
+        product.completeInspection(inspectedGrade, inspectorId);
         Product saved = productRepository.save(product);
 
         eventPublisher.publishEvent(new ProductInspectedEvent(saved));
@@ -145,11 +145,11 @@ public class ProductCommandService {
     }
 
     // 검수 불합격 처리 (검수자용)
-    public Product failInspection(UUID productId) {
+    public Product failInspection(UUID productId, UUID inspectorId) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
 
-        product.failInspection();
+        product.failInspection(inspectorId);
         return productRepository.save(product);
     }
 }

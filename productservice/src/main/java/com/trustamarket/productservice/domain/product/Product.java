@@ -32,6 +32,8 @@ public class Product {
     @Column(nullable = false)
     private UUID categoryId;
 
+    private UUID inspectorId;
+
     @Column(nullable = false, length = MAX_TITLE_LENGTH)
     private String title;
 
@@ -167,12 +169,13 @@ public class Product {
     }
 
     // 검수 시작 (검수자가 상품 수령 후)
-    public void startInspection() {
+    public void startInspection(UUID inspectorId) {
         if (this.inspectionStatus != InspectionStatus.PENDING) {
             throw new IllegalStateException(
                     "검수 대기 상태인 상품만 검수를 시작할 수 있습니다. 현재 상태: " + this.inspectionStatus.getDescription());
         }
         this.inspectionStatus = InspectionStatus.IN_PROGRESS;
+        this.inspectorId = inspectorId;
         onUpdate();
     }
 
@@ -182,7 +185,7 @@ public class Product {
     }
 
     // 검수 통과 → 등급 확정 + 상세페이지 검수완료 뱃지 표시
-    public void completeInspection(ProductGrade inspectedGrade) {
+    public void completeInspection(ProductGrade inspectedGrade, UUID inspectorId) {
         if (this.inspectionStatus != InspectionStatus.IN_PROGRESS) {
             throw new IllegalStateException("검수 중인 상품만 등급을 확정할 수 있습니다.");
         }
@@ -192,15 +195,17 @@ public class Product {
         this.grade = inspectedGrade;
         this.inspectionStatus = InspectionStatus.PASSED;
         this.status = ProductStatus.ON_SALE;
+        this.inspectorId = inspectorId;
         onUpdate();
     }
 
     // 검수 불합격 → 판매자에게 반송
-    public void failInspection() {
+    public void failInspection(UUID inspectorId) {
         if (this.inspectionStatus != InspectionStatus.IN_PROGRESS) {
             throw new IllegalStateException("검수 중인 상품만 검수 불합격 처리할 수 있습니다.");
         }
         this.inspectionStatus = InspectionStatus.FAILED;
+        this.inspectorId = inspectorId;
         onUpdate();
     }
 
