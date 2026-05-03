@@ -14,15 +14,8 @@ java {
 }
 
 ext {
-	// Spring Boot 3.x 버전과 호환되는 Spring Cloud 버전입니다.
-	set('springCloudVersion', "2024.0.1")
-}
-
-dependencyManagement {
-	imports {
-		// 모든 Spring Cloud 관련 라이브러리(Feign, Eureka, Config 등)의 버전을 자동으로 관리합니다.
-		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
-	}
+	// Spring Boot 3.5.x 와 호환되는 Spring Cloud 버전 (common 의 spring-cloud-starter-openfeign 등)
+	set('springCloudVersion', "2025.0.2")
 }
 
 repositories {
@@ -64,14 +57,20 @@ dependencies {
 	// AWS SDK v2 S3
 	implementation 'software.amazon.awssdk:s3:2.25.0'
 
-	// 서비스 검색 (Eureka Client) - Eureka 서버에 등록하기 위해 필요[cite: 1]
+	// 서비스 검색 (Eureka Client)
 	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
 
-	// 외부 설정 관리 (Config Client) - config-repo의 설정을 읽어오기 위해 필요[cite: 1]
+	// 외부 설정 관리 (Config Client)
 	implementation 'org.springframework.cloud:spring-cloud-starter-config'
 
-	// 다른 서비스 호출 (OpenFeign) - 만약 common에 포함되어 있지 않다면 직접 추가
+	// 다른 서비스 호출 (OpenFeign)
 	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+}
+
+dependencyManagement {
+	imports {
+		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+	}
 }
 
 // Querydsl QClass 생성 위치 설정
