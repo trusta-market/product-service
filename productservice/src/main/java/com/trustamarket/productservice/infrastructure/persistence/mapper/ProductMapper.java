@@ -49,6 +49,7 @@ public class ProductMapper {
                 entity.getId(),
                 entity.getSellerId(),
                 entity.getCategoryId(),
+                null,   // inspectorId — JPA 엔티티에 컬럼 추가 후 entity.getInspectorId() 로 교체 (별도 마이그레이션)
                 entity.getTitle(),
                 entity.getDescription(),
                 entity.getPrice(),

@@ -2,6 +2,7 @@ package com.trustamarket.productservice.presentation.controller;
 
 import com.trustamarket.productservice.application.ProductImageAppService;
 import com.trustamarket.productservice.domain.product.Product;
+import com.trustamarket.productservice.domain.product.ProductImage;
 import com.trustamarket.productservice.presentation.dto.request.ProductImageReorderRequest;
 import com.trustamarket.productservice.presentation.dto.response.ProductImageResponse;
 import jakarta.validation.Valid;
@@ -11,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -31,10 +33,7 @@ public class ProductImageController {
             @RequestPart("file") MultipartFile file
     ) {
         Product product = productImageAppService.addImage(productId, sellerId, file);
-        return product.getImages().stream()
-                .filter(img -> !img.isDeleted())
-                .map(ProductImageResponse::from)
-                .collect(Collectors.toList());
+        return toActiveImageResponses(product);
     }
 
     // 이미지 삭제
@@ -56,10 +55,7 @@ public class ProductImageController {
             @PathVariable UUID imageId
     ) {
         Product product = productImageAppService.changeThumbnail(productId, sellerId, imageId);
-        return product.getImages().stream()
-                .filter(img -> !img.isDeleted())
-                .map(ProductImageResponse::from)
-                .collect(Collectors.toList());
+        return toActiveImageResponses(product);
     }
 
     // 이미지 순서 변경
@@ -70,7 +66,13 @@ public class ProductImageController {
             @Valid @RequestBody ProductImageReorderRequest request
     ) {
         Product product = productImageAppService.reorderImages(productId, sellerId, request.getImageIds());
-        return product.getImages().stream()
+        return toActiveImageResponses(product);
+    }
+
+    // 응답 매핑 공통 — null 가드 + soft-delete 필터 일원화 (NPE/중복 코드 방지)
+    private List<ProductImageResponse> toActiveImageResponses(Product product) {
+        List<ProductImage> images = product.getImages() == null ? Collections.emptyList() : product.getImages();
+        return images.stream()
                 .filter(img -> !img.isDeleted())
                 .map(ProductImageResponse::from)
                 .collect(Collectors.toList());

@@ -52,7 +52,10 @@ public class Product {
     @Enumerated(EnumType.STRING)
     private InspectionStatus inspectionStatus;
 
-    @OneToMany(cascade = CascadeType.ALL)
+    // orphanRemoval=true — update() 의 images.clear() 가 DB row 도 같이 삭제하도록 (orphan row 방지)
+    // @OrderBy — sortOrder 변경 후 응답 순서 안정화 (reorder 후 reload 없이도 정렬됨)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("sortOrder ASC")
     @JoinColumn(name = "product_id")
     private List<ProductImage> images;
 
@@ -97,7 +100,7 @@ public class Product {
     }
 
     // db에 저장디어있던 id나 등록시간 같은걸 다시 살려낸다
-    public static Product restore(UUID id, UUID sellerId, UUID categoryId, String title,
+    public static Product restore(UUID id, UUID sellerId, UUID categoryId, UUID inspectorId, String title,
                                   String description, Integer price, ProductGrade grade,
                                   ProductStatus status, InspectionStatus inspectionStatus, List<ProductImage> images,
                                   LocalDateTime createdAt, LocalDateTime updatedAt) {
@@ -105,6 +108,7 @@ public class Product {
         product.id = id;
         product.sellerId = sellerId;
         product.categoryId = categoryId;
+        product.inspectorId = inspectorId;   // 검수 행위자 audit trail — 누락 시 검수 이력 손실
         product.title = title;
         product.description = description;
         product.price = price;

@@ -3,8 +3,11 @@ package com.trustamarket.productservice.presentation.controller;
 import com.trustamarket.productservice.application.CategoryService;
 import com.trustamarket.productservice.domain.category.Category;
 import com.trustamarket.productservice.presentation.dto.response.CategoryResponse;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,6 +17,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/categories")
 @RequiredArgsConstructor
+@Validated   // @RequestParam 단위 제약 활성
 public class CategoryController {
 
     private final CategoryService categoryService;
@@ -55,11 +59,11 @@ public class CategoryController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public CategoryResponse create(
-            @RequestParam String name,
+            @RequestParam @NotBlank String name,
             @RequestParam(required = false) UUID parentId,
-            @RequestParam int depth,
-            @RequestParam int displayOrder,
-            @RequestParam int highValueThreshold
+            @RequestParam @Min(0) int depth,
+            @RequestParam @Min(0) int displayOrder,
+            @RequestParam @Min(0) int highValueThreshold
     ) {
         Category category = categoryService.create(name, parentId, depth, displayOrder, highValueThreshold);
         return CategoryResponse.from(category);
