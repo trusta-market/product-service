@@ -32,6 +32,8 @@ public class Product {
     @Column(nullable = false)
     private UUID categoryId;
 
+    private UUID inspectorId;
+
     @Column(nullable = false, length = MAX_TITLE_LENGTH)
     private String title;
 
@@ -50,7 +52,10 @@ public class Product {
     @Enumerated(EnumType.STRING)
     private InspectionStatus inspectionStatus;
 
-    @OneToMany(cascade = CascadeType.ALL)
+    // orphanRemoval=true — update() 의 images.clear() 가 DB row 도 같이 삭제하도록 (orphan row 방지)
+    // @OrderBy — sortOrder 변경 후 응답 순서 안정화 (reorder 후 reload 없이도 정렬됨)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("sortOrder ASC")
     @JoinColumn(name = "product_id")
     private List<ProductImage> images;
 
@@ -80,12 +85,22 @@ public class Product {
 
     // 상품등록
     public static Product create(UUID sellerId, UUID categoryId, String title,
-                                 String description, Integer price, ProductGrade grade, boolean requiresInspection) {
-        return new Product(sellerId, categoryId, title, description, price, grade, requiresInspection);
+                                 String description, Integer price, ProductGrade grade, boolean requiresInspection, List<String> imageUrls) {
+        // 1. 기본 정보로 상품 생성
+        Product product = new Product(sellerId, categoryId, title, description, price, grade, requiresInspection);
+
+        // 2. 이미지 URL 리스트가 있다면 ProductImage 객체로 변환하여 추가
+        if (imageUrls != null && !imageUrls.isEmpty()) {
+            for (int i = 0; i < imageUrls.size(); i++) {
+                // ProductImage.create(상품, URL, 순서, 썸네일여부) 형태의 메서드가 필요합니다.
+                product.addImage(ProductImage.create(product, imageUrls.get(i), i, i == 0));
+            }
+        }
+        return product;
     }
 
     // db에 저장디어있던 id나 등록시간 같은걸 다시 살려낸다
-    public static Product restore(UUID id, UUID sellerId, UUID categoryId, String title,
+    public static Product restore(UUID id, UUID sellerId, UUID categoryId, UUID inspectorId, String title,
                                   String description, Integer price, ProductGrade grade,
                                   ProductStatus status, InspectionStatus inspectionStatus, List<ProductImage> images,
                                   LocalDateTime createdAt, LocalDateTime updatedAt) {
@@ -93,6 +108,7 @@ public class Product {
         product.id = id;
         product.sellerId = sellerId;
         product.categoryId = categoryId;
+        product.inspectorId = inspectorId;   // 검수 행위자 audit trail — 누락 시 검수 이력 손실
         product.title = title;
         product.description = description;
         product.price = price;
@@ -108,12 +124,19 @@ public class Product {
 
     // 제목, 가격 같은 상세내용 수정
     public void update(String title, String description, Integer price,
-                       UUID categoryId) {
+                       UUID categoryId, List<String> imageUrls) {
         validate(title, price);
         this.title = title;
         this.description = description;
         this.price = price;
         this.categoryId = categoryId;
+
+        if (imageUrls != null) {
+            this.images.clear(); // 기존 이미지 초기화 (orphanRemoval=true 설정 시 DB에서도 삭제됨)
+            for (int i = 0; i < imageUrls.size(); i++) {
+                this.addImage(ProductImage.create(this, imageUrls.get(i), i, i == 0));
+            }
+        }
         onUpdate();
     }
 
@@ -150,12 +173,13 @@ public class Product {
     }
 
     // 검수 시작 (검수자가 상품 수령 후)
-    public void startInspection() {
+    public void startInspection(UUID inspectorId) {
         if (this.inspectionStatus != InspectionStatus.PENDING) {
             throw new IllegalStateException(
                     "검수 대기 상태인 상품만 검수를 시작할 수 있습니다. 현재 상태: " + this.inspectionStatus.getDescription());
         }
         this.inspectionStatus = InspectionStatus.IN_PROGRESS;
+        this.inspectorId = inspectorId;
         onUpdate();
     }
 
@@ -165,7 +189,7 @@ public class Product {
     }
 
     // 검수 통과 → 등급 확정 + 상세페이지 검수완료 뱃지 표시
-    public void completeInspection(ProductGrade inspectedGrade) {
+    public void completeInspection(ProductGrade inspectedGrade, UUID inspectorId) {
         if (this.inspectionStatus != InspectionStatus.IN_PROGRESS) {
             throw new IllegalStateException("검수 중인 상품만 등급을 확정할 수 있습니다.");
         }
@@ -175,15 +199,17 @@ public class Product {
         this.grade = inspectedGrade;
         this.inspectionStatus = InspectionStatus.PASSED;
         this.status = ProductStatus.ON_SALE;
+        this.inspectorId = inspectorId;
         onUpdate();
     }
 
     // 검수 불합격 → 판매자에게 반송
-    public void failInspection() {
+    public void failInspection(UUID inspectorId) {
         if (this.inspectionStatus != InspectionStatus.IN_PROGRESS) {
             throw new IllegalStateException("검수 중인 상품만 검수 불합격 처리할 수 있습니다.");
         }
         this.inspectionStatus = InspectionStatus.FAILED;
+        this.inspectorId = inspectorId;
         onUpdate();
     }
 

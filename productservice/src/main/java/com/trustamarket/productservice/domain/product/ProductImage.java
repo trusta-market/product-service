@@ -12,7 +12,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.Objects;
 import java.util.UUID;
 
 @Entity
@@ -45,7 +44,7 @@ public class ProductImage {
 
 
     // 사진 신규 등록
-    public static ProductImage create(String imageUrl, int sortOrder, boolean isThumbnail) {
+    public static ProductImage create(Product product, String imageUrl, int sortOrder, boolean isThumbnail) {
         return new ProductImage(null, imageUrl, sortOrder, isThumbnail, false, null);
     }
 
