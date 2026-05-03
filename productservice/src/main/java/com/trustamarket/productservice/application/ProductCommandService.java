@@ -9,6 +9,7 @@ import com.trustamarket.productservice.application.exception.InvalidStatusTransi
 import com.trustamarket.productservice.application.exception.ProductAccessDeniedException;
 import com.trustamarket.productservice.application.exception.ProductNotFoundException;
 import com.trustamarket.productservice.application.exception.errorcode.ProductErrorCode;
+import com.trustamarket.productservice.domain.category.Category;
 import com.trustamarket.productservice.domain.category.CategoryRepository;
 import com.trustamarket.productservice.domain.product.Product;
 import com.trustamarket.productservice.domain.product.ProductDomainService;
@@ -34,22 +35,31 @@ public class ProductCommandService {
     private final ApplicationEventPublisher eventPublisher;
 
     // 상품 등록
+    // 카테고리별 임계치(`Category.getEffectiveThreshold()`)와 가격을 비교해 검수 필요 여부 결정.
+    // - 가격 ≥ 임계치 (고가): PENDING_INSPECTION + InspectionStatus.PENDING
+    // - 가격 < 임계치 (저가): ON_SALE 즉시 + InspectionStatus.NONE
     public Product create(UUID sellerId, String title, String description, Integer price, UUID categoryId, List<String> imageUrls) {
-        // 1. 카테고리 확인
-        categoryRepository.findById(categoryId)
+        // 1. 카테고리 조회 (없으면 404)
+        Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new CategoryNotFoundException(ProductErrorCode.CATEGORY_NOT_FOUND));
 
-        // grade: 초기에는 등급이 없으므로 null 전송
-        // requiresInspection: 일단 기본값으로 true(검수 필요)를 설정 (프로젝트 정책에 따라 변경)
+        // 2. 임계치 비교로 검수 필요 여부 동적 결정 (이전엔 true 하드코딩이었음)
+        // price 는 Integer 라 nullable — auto-unbox NPE 회피용 명시 가드
+        if (price == null) {
+            throw new IllegalArgumentException("price must not be null");
+        }
+        boolean requiresInspection = price >= category.getEffectiveThreshold();
+
+        // grade: 초기엔 미정. 검수 통과 시 검수자가 확정.
         Product product = Product.create(
                 sellerId,
                 categoryId,
                 title,
                 description,
                 price,
-                null,   // grade 추가
-                true,
-                imageUrls// requiresInspection 추가
+                null,
+                requiresInspection,
+                imageUrls
         );
 
         Product savedProduct = productRepository.save(product);
