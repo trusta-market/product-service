@@ -54,7 +54,7 @@ class ProductCommandServiceTest {
         when(categoryRepository.findById(cat.getId())).thenReturn(Optional.of(cat));
         when(productRepository.save(any(Product.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        Product result = service.create(sellerId, "에르메스 가방", "설명", 500_000, cat.getId());
+        Product result = service.create(sellerId, "에르메스 가방", "설명", 500_000, cat.getId(), null);
 
         assertThat(result.getStatus()).isEqualTo(ProductStatus.PENDING_INSPECTION);
         assertThat(result.getInspectionStatus()).isEqualTo(InspectionStatus.PENDING);
@@ -68,49 +68,64 @@ class ProductCommandServiceTest {
         when(categoryRepository.findById(cat.getId())).thenReturn(Optional.of(cat));
         when(productRepository.save(any(Product.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        Product result = service.create(sellerId, "보세 가방", "설명", 200_000, cat.getId());
+        Product result = service.create(sellerId, "보세 가방", "설명", 200_000, cat.getId(), null);
 
         assertThat(result.getStatus()).isEqualTo(ProductStatus.ON_SALE);
         assertThat(result.getInspectionStatus()).isEqualTo(InspectionStatus.NONE);
     }
 
     @Test
-    @DisplayName("패션 카테고리 (임계치 20만) + 30만원 → PENDING_INSPECTION")
+    @DisplayName("패션 카테고리 (임계치 20만) + 30만원 → PENDING_INSPECTION + PENDING")
     void fashionCategory_priceAboveThreshold() {
         UUID sellerId = UUID.randomUUID();
         Category cat = category("패션", 200_000);
         when(categoryRepository.findById(cat.getId())).thenReturn(Optional.of(cat));
         when(productRepository.save(any(Product.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        Product result = service.create(sellerId, "디자이너 자켓", "설명", 300_000, cat.getId());
+        Product result = service.create(sellerId, "디자이너 자켓", "설명", 300_000, cat.getId(), null);
 
         assertThat(result.getStatus()).isEqualTo(ProductStatus.PENDING_INSPECTION);
+        assertThat(result.getInspectionStatus()).isEqualTo(InspectionStatus.PENDING);
     }
 
     @Test
-    @DisplayName("패션 카테고리 (임계치 20만) + 10만원 → ON_SALE")
+    @DisplayName("패션 카테고리 (임계치 20만) + 10만원 → ON_SALE + NONE")
     void fashionCategory_priceBelowThreshold() {
         UUID sellerId = UUID.randomUUID();
         Category cat = category("패션", 200_000);
         when(categoryRepository.findById(cat.getId())).thenReturn(Optional.of(cat));
         when(productRepository.save(any(Product.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        Product result = service.create(sellerId, "기본 티셔츠", "설명", 100_000, cat.getId());
+        Product result = service.create(sellerId, "기본 티셔츠", "설명", 100_000, cat.getId(), null);
 
         assertThat(result.getStatus()).isEqualTo(ProductStatus.ON_SALE);
+        assertThat(result.getInspectionStatus()).isEqualTo(InspectionStatus.NONE);
     }
 
     @Test
-    @DisplayName("경계값 — 가격이 임계치와 정확히 같으면 PENDING_INSPECTION (>= 비교)")
+    @DisplayName("경계값 — 가격이 임계치와 정확히 같으면 PENDING_INSPECTION + PENDING (>= 비교)")
     void priceEqualsThreshold_goesToInspection() {
         UUID sellerId = UUID.randomUUID();
         Category cat = category("명품/럭셔리", 300_000);
         when(categoryRepository.findById(cat.getId())).thenReturn(Optional.of(cat));
         when(productRepository.save(any(Product.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        Product result = service.create(sellerId, "딱 임계치 상품", "설명", 300_000, cat.getId());
+        Product result = service.create(sellerId, "딱 임계치 상품", "설명", 300_000, cat.getId(), null);
 
         assertThat(result.getStatus()).isEqualTo(ProductStatus.PENDING_INSPECTION);
+        assertThat(result.getInspectionStatus()).isEqualTo(InspectionStatus.PENDING);
+    }
+
+    @Test
+    @DisplayName("price null → IllegalArgumentException (Integer auto-unbox NPE 가드)")
+    void priceNull_throws() {
+        UUID sellerId = UUID.randomUUID();
+        Category cat = category("패션", 200_000);
+        when(categoryRepository.findById(cat.getId())).thenReturn(Optional.of(cat));
+
+        assertThatThrownBy(() ->
+                service.create(sellerId, "title", "desc", null, cat.getId(), null)
+        ).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -121,7 +136,7 @@ class ProductCommandServiceTest {
         when(categoryRepository.findById(missingId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() ->
-                service.create(sellerId, "title", "desc", 50_000, missingId)
+                service.create(sellerId, "title", "desc", 50_000, missingId, null)
         ).isInstanceOf(CategoryNotFoundException.class);
     }
 }
