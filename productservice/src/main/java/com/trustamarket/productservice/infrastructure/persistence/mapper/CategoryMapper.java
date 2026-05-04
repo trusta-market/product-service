@@ -54,7 +54,7 @@ public class CategoryMapper {
                 .depth(category.getDepth())
                 .displayOrder(category.getDisplayOrder())
                 .inspectionThreshold(category.getInspectionThreshold())  // 변경
-                .inspectionPolicy(category.getEffectivePolicy())
+                .inspectionPolicy(category.getInspectionPolicy())
                 .build();
     }
 }
