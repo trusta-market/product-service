@@ -45,7 +45,7 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
-        spring.json.trusted.packages: '*'
+        spring.json.trusted.packages: com.trustamarket.productservice.application.event
         spring.json.value.default.type: com.trustamarket.productservice.application.event.ProductSoldOutMessage
 
   config:

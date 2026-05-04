@@ -1,6 +1,8 @@
 package com.trustamarket.productservice.application.event;
 
 import com.trustamarket.productservice.application.ProductCommandService;
+import com.trustamarket.productservice.application.exception.InvalidStatusTransitionException;
+import com.trustamarket.productservice.application.exception.ProductNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -23,10 +25,15 @@ public class ProductSoldOutListener {
                     message.eventId(), message.productId(), message.orderId());
             productCommandService.markSoldOutByOrder(message.productId());
             ack.acknowledge();
+        } catch (ProductNotFoundException | InvalidStatusTransitionException e) {
+            // 비재시도성 비즈니스 실패 — 무한 재배달 방지 위해 ack + skip. (DLT 도입 전 임시)
+            log.warn("[ProductSoldOut] non-retryable, ack and skip — eventId={}, productId={}",
+                    message.eventId(), message.productId(), e);
+            ack.acknowledge();
         } catch (Exception e) {
+            // 통신/일시 오류 — ack 안 함 → 재시도 가능
             log.error("[ProductSoldOut] 처리 실패 — eventId={}, productId={}",
                     message.eventId(), message.productId(), e);
-            // ack 안 함 → 재시도 가능
             throw e;
         }
     }
