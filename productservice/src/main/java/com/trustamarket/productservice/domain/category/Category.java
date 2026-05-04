@@ -25,34 +25,45 @@ public class Category {
 
     private int depth;
     private int displayOrder;
-    private Integer highValueThreshold;  // 카테고리별 고가 기준 금액
+    @Column(name = "inspection_threshold")
+    private Integer inspectionThreshold;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "inspection_policy", length = 20)
+    private InspectionPolicy inspectionPolicy;
 
     @Builder
     public Category(UUID id, String name, Category parent,
-                    int depth, int displayOrder, Integer highValueThreshold) {
+                    int depth, int displayOrder, Integer inspectionThreshold, InspectionPolicy inspectionPolicy) {
         this.id = id;
         this.name = name;
         this.parent = parent;
         this.depth = depth;
         this.displayOrder = displayOrder;
-        this.highValueThreshold = highValueThreshold;
+        this.inspectionThreshold = inspectionThreshold;
+        this.inspectionPolicy    = inspectionPolicy;
+    }
+
+    public InspectionPolicy getEffectivePolicy() {
+        return this.inspectionPolicy != null
+                ? this.inspectionPolicy
+                : CategoryThreshold.getPolicy(this.name);
     }
 
     public int getEffectiveThreshold() {
-        if (this.highValueThreshold != null) {
-            return this.highValueThreshold;
-        }
-        return CategoryThreshold.getThreshold(this.name);
+        return this.inspectionThreshold != null
+                ? this.inspectionThreshold
+                : CategoryThreshold.getThreshold(this.name);
+    }
+    public boolean requiresInspection(int price) {
+        return switch (getEffectivePolicy()) {
+            case ALWAYS      -> true;
+            case NEVER       -> false;
+            case PRICE_BASED -> price >= getEffectiveThreshold();
+        };
     }
 
-    // 최상위 카테고리 여부 확인
-    public boolean isRoot() {
-        return this.parent == null;
-    }
-
-    // 하위 카테고리 여부 확인
-    public boolean isSubCategory() {
-        return this.parent != null;
-    }
+    public boolean isRoot() { return this.parent == null; }
+    public boolean isSubCategory() { return this.parent != null; }
 }
 
