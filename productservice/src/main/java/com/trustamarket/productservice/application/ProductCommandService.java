@@ -48,8 +48,8 @@ public class ProductCommandService {
         if (price == null) {
             throw new IllegalArgumentException("price must not be null");
         }
-        boolean requiresInspection = price >= category.getEffectiveThreshold();
-
+        boolean requiresInspection = productDomainService.requiresInspection(category, price);
+        
         // grade: 초기엔 미정. 검수 통과 시 검수자가 확정.
         Product product = Product.create(
                 sellerId,
@@ -75,16 +75,18 @@ public class ProductCommandService {
                 .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
 
         if (!product.isOwnedBy(sellerId)) {
-            throw new ProductAccessDeniedException(ProductErrorCode.PRODUCT_ACCESS_DENIED);        }
+            throw new ProductAccessDeniedException(ProductErrorCode.PRODUCT_ACCESS_DENIED);
+        }
 
-        categoryRepository.findById(categoryId)
+        // 변경된 카테고리·가격 기준으로 검수 필요 여부 재판정
+        Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new CategoryNotFoundException(ProductErrorCode.CATEGORY_NOT_FOUND));
 
-        product.update(title, description, price, categoryId, imageUrls);
+        boolean needsInspection = productDomainService.requiresInspection(category, price);
+
+        product.update(title, description, price, categoryId, imageUrls, needsInspection);
         Product saved = productRepository.save(product);
-
         eventPublisher.publishEvent(new ProductUpdatedEvent(saved));
-
         return saved;
     }
 
@@ -106,31 +108,33 @@ public class ProductCommandService {
                 .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
 
         if (!product.isOwnedBy(sellerId)) {
-            throw new ProductAccessDeniedException(ProductErrorCode.PRODUCT_ACCESS_DENIED);        }
+            throw new ProductAccessDeniedException(ProductErrorCode.PRODUCT_ACCESS_DENIED);
+        }
 
         productDomainService.validateStatusTransition(product.getStatus(), newStatus);
 
         switch (newStatus) {
             case RESERVED -> {
-                if (!product.isSaleable()) {      // ← isSaleable() 활성화
+                if (!product.isSaleable()) {
                     throw new InvalidStatusTransitionException(ProductErrorCode.INVALID_STATUS_TRANSITION);
                 }
                 product.reserve();
             }
-            case SOLD_OUT -> product.completeSale();
-            case ON_SALE  -> {
+            case SOLD_OUT           -> product.completeSale();
+            case ON_SALE            -> {
                 if (product.getStatus() == ProductStatus.RESERVED) {
-                    product.cancelReservation(); // 예약 중일 때만 예약 취소 로직 실행
+                    product.cancelReservation();
                 } else {
-                    // 예약 상태가 아니라면 도메인 모델에 정의된 일반적인 판매 시작 메서드나 상태 변경 로직 호출
                     product.reopenForSale();
                 }
             }
+            case PENDING_INSPECTION -> product.resubmitForInspection(); // 추가 — 검수반려 후 재검수 신청
             default -> throw new InvalidStatusTransitionException(ProductErrorCode.INVALID_STATUS_TRANSITION);
         }
 
         return productRepository.save(product);
     }
+
 
     // 검수 시작 (검수자용)
     public Product startInspection(UUID productId, UUID inspectorId) {
