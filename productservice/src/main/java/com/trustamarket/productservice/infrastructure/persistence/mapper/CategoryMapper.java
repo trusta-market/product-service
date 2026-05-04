@@ -18,7 +18,8 @@ public class CategoryMapper {
                 .parent(toDomainSummary(entity.getParent()))
                 .depth(entity.getDepth())
                 .displayOrder(entity.getDisplayOrder())
-                .highValueThreshold(entity.getHighValueThreshold())
+                .inspectionThreshold(entity.getInspectionThreshold())
+                .inspectionPolicy(entity.getInspectionPolicy())
                 .build();
     }
     private Category toDomainSummary(CategoryJpaEntity entity) {
@@ -52,7 +53,8 @@ public class CategoryMapper {
                 .parent(parentEntity)
                 .depth(category.getDepth())
                 .displayOrder(category.getDisplayOrder())
-                .highValueThreshold(category.getHighValueThreshold())
+                .inspectionThreshold(category.getInspectionThreshold())  // 변경
+                .inspectionPolicy(category.getEffectivePolicy())
                 .build();
     }
 }

@@ -2,6 +2,7 @@ package com.trustamarket.productservice.presentation.controller;
 
 import com.trustamarket.productservice.application.CategoryService;
 import com.trustamarket.productservice.domain.category.Category;
+import com.trustamarket.productservice.domain.category.InspectionPolicy;
 import com.trustamarket.productservice.presentation.dto.response.CategoryResponse;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -9,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import com.trustamarket.productservice.domain.category.InspectionPolicy;
+
 
 import java.util.List;
 import java.util.UUID;
@@ -63,9 +66,9 @@ public class CategoryController {
             @RequestParam(required = false) UUID parentId,
             @RequestParam @Min(0) int depth,
             @RequestParam @Min(0) int displayOrder,
-            @RequestParam @Min(0) int highValueThreshold
-    ) {
-        Category category = categoryService.create(name, parentId, depth, displayOrder, highValueThreshold);
+            @RequestParam(required = false) Integer inspectionThreshold,
+            @RequestParam(required = false) InspectionPolicy inspectionPolicy    ) {
+        Category category = categoryService.create(name, parentId, depth, displayOrder, inspectionThreshold, inspectionPolicy);
         return CategoryResponse.from(category);
     }
 

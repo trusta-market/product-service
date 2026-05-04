@@ -5,6 +5,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import com.trustamarket.productservice.domain.category.InspectionPolicy;
 
 import java.util.UUID;
 
@@ -31,17 +32,21 @@ public class CategoryJpaEntity {
     @Column(nullable = false)
     private int displayOrder;
 
-    @Column(nullable = false)
-    private Integer highValueThreshold;
+    @Column(name = "inspection_threshold")
+    private Integer inspectionThreshold;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "inspection_policy", length = 20)
+    private InspectionPolicy inspectionPolicy;
     @Builder
     public CategoryJpaEntity(UUID id, String name, CategoryJpaEntity parent,
-                             int depth, int displayOrder, Integer highValueThreshold) {
+                             int depth, int displayOrder, Integer inspectionThreshold, InspectionPolicy inspectionPolicy) {
         this.id = id;
         this.name = name;
         this.parent = parent;
         this.depth = depth;
         this.displayOrder = displayOrder;
-        this.highValueThreshold = highValueThreshold;
+        this.inspectionThreshold = inspectionThreshold;
+        this.inspectionPolicy    = inspectionPolicy;
     }
 }
