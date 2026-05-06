@@ -153,4 +153,18 @@ public class ProductCommandService {
         product.failInspection(inspectorId);
         return productRepository.save(product);
     }
+
+    // 주문 확정 이벤트 (Kafka order.product.sold-out) 수신 시 호출. 시스템 호출이라 sellerId 검증 X.
+    // 멱등성: 이미 SOLD_OUT 인 상품은 no-op (재배달 대비).
+    public void markSoldOutByOrder(UUID productId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
+
+        if (product.getStatus() == ProductStatus.SOLD_OUT) {
+            return;
+        }
+        productDomainService.validateStatusTransition(product.getStatus(), ProductStatus.SOLD_OUT);
+        product.markSoldOutByOrder();
+        productRepository.save(product);
+    }
 }

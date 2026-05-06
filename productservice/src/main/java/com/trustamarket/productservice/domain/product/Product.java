@@ -183,6 +183,12 @@ public class Product {
         this.status = ProductStatus.ON_SALE;
     }
 
+    // 주문 확정 이벤트로 인한 시스템 SOLD_OUT 전환. 사전 ProductDomainService.validateStatusTransition 통과 가정.
+    public void markSoldOutByOrder() {
+        this.status = ProductStatus.SOLD_OUT;
+        onUpdate();
+    }
+
     // 검수 시작 (검수자가 상품 수령 후)
     public void startInspection(UUID inspectorId) {
         if (this.inspectionStatus != InspectionStatus.PENDING) {
