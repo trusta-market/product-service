@@ -1,4 +1,3 @@
--- p_categories 테이블 생성
 CREATE TABLE IF NOT EXISTS p_categories (
                                             id                   UUID         NOT NULL,
                                             name                 VARCHAR(255),
@@ -11,10 +10,19 @@ CREATE TABLE IF NOT EXISTS p_categories (
     CONSTRAINT p_categories_inspection_policy_check
     CHECK (inspection_policy IN ('ALWAYS', 'PRICE_BASED', 'NEVER')),
     CONSTRAINT fk_categories_parent
-    FOREIGN KEY (parent_id) REFERENCES p_categories(id)
+    FOREIGN KEY (parent_id) REFERENCES p_categories(id),
+
+    -- 같은 부모 아래 동일한 이름 중복 방지
+    CONSTRAINT uq_category_name_per_parent
+    UNIQUE (parent_id, name)
     );
 
--- p_products 테이블 생성
+-- 대분류(parent_id IS NULL)의 이름 중복 방지를 위한 부분 유니크 인덱스
+-- 표준 UNIQUE 제약은 NULL을 여러 개 허용하기 때문에 별도 처리 필요
+CREATE UNIQUE INDEX IF NOT EXISTS uq_root_category_name
+    ON p_categories (name)
+    WHERE parent_id IS NULL;
+
 CREATE TABLE IF NOT EXISTS p_products (
                                           id                UUID         NOT NULL,
                                           seller_id         UUID         NOT NULL,
@@ -31,7 +39,6 @@ CREATE TABLE IF NOT EXISTS p_products (
     PRIMARY KEY (id)
     );
 
--- p_product_images 테이블 생성
 CREATE TABLE IF NOT EXISTS p_product_images (
                                                 id           UUID    NOT NULL,
                                                 product_id   UUID,
