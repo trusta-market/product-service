@@ -29,6 +29,13 @@ spring:
         default_schema: ${SCHEMA:p_product}
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    schemas: p_product
+    baseline-on-migrate: true
+    baseline-version: 2
+
   data:
     elasticsearch:
       uris: http://localhost:9200
