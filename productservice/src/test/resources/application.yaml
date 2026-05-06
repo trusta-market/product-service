@@ -34,7 +34,7 @@ spring:
     locations: classpath:db/migration
     schemas: p_product
     baseline-on-migrate: true
-    baseline-version: 2
+    baseline-version: 0
 
   data:
     elasticsearch:
