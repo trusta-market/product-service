@@ -4,6 +4,7 @@ import com.trustamarket.productservice.application.exception.CategoryNotFoundExc
 import com.trustamarket.productservice.application.exception.errorcode.ProductErrorCode;
 import com.trustamarket.productservice.domain.category.Category;
 import com.trustamarket.productservice.domain.category.CategoryRepository;
+import com.trustamarket.productservice.domain.category.InspectionPolicy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,31 +19,18 @@ public class CategoryService {
 
     private final CategoryRepository categoryRepository;
 
-    // 전체 카테고리 조회
-    public List<Category> findAll() {
-        return categoryRepository.findAll();
-    }
+    public List<Category> findAll() { return categoryRepository.findAll(); }
+    public List<Category> findRootCategories() { return categoryRepository.findByParentIsNull(); }
+    public List<Category> findSubCategories(UUID parentId) { return categoryRepository.findByParentId(parentId); }
 
-    // 최상위 카테고리만 조회
-    public List<Category> findRootCategories() {
-        return categoryRepository.findByParentIsNull();
-    }
-
-    // 하위 카테고리 목록 조회
-    public List<Category> findSubCategories(UUID parentId) {
-        return categoryRepository.findByParentId(parentId);
-    }
-
-    // 단건 조회
     public Category findById(UUID categoryId) {
         return categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new CategoryNotFoundException(ProductErrorCode.CATEGORY_NOT_FOUND));
     }
 
-    // 카테고리 등록 (관리자용)
     @Transactional
-    public Category create(String name, UUID parentId, int depth,
-                           int displayOrder, int highValueThreshold) {
+    public Category create(String name, UUID parentId, int depth, int displayOrder,
+                           Integer inspectionThreshold, InspectionPolicy inspectionPolicy) {
         Category parent = parentId != null
                 ? categoryRepository.findById(parentId)
                   .orElseThrow(() -> new CategoryNotFoundException(ProductErrorCode.CATEGORY_NOT_FOUND))
@@ -54,12 +42,12 @@ public class CategoryService {
                         .parent(parent)
                         .depth(depth)
                         .displayOrder(displayOrder)
-                        .highValueThreshold(highValueThreshold)
+                        .inspectionThreshold(inspectionThreshold)
+                        .inspectionPolicy(inspectionPolicy)
                         .build()
         );
     }
 
-    // 카테고리 삭제 (관리자용)
     @Transactional
     public void delete(UUID categoryId) {
         categoryRepository.findById(categoryId)

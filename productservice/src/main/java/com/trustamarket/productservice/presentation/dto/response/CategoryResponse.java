@@ -1,6 +1,7 @@
 package com.trustamarket.productservice.presentation.dto.response;
 
 import com.trustamarket.productservice.domain.category.Category;
+import com.trustamarket.productservice.domain.category.InspectionPolicy;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,7 +18,8 @@ public class CategoryResponse {
     private final String name;
     private final int depth;
     private final int displayOrder;
-    private final Integer highValueThreshold;
+    private final Integer          inspectionThreshold;
+    private final InspectionPolicy inspectionPolicy;
     private final UUID parentId;
     private final String parentName;
 
@@ -29,7 +31,8 @@ public class CategoryResponse {
                 .name(category.getName())
                 .depth(category.getDepth())
                 .displayOrder(category.getDisplayOrder())
-                .highValueThreshold(category.getHighValueThreshold())
+                .inspectionThreshold(category.getInspectionThreshold())
+                .inspectionPolicy(category.getEffectivePolicy())
                 .parentId(category.getParent() != null ? category.getParent().getId() : null)
                 .parentName(category.getParent() != null ? category.getParent().getName() : null)
                 .build();

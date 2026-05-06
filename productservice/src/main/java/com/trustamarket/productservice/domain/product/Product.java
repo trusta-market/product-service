@@ -124,12 +124,23 @@ public class Product {
 
     // 제목, 가격 같은 상세내용 수정
     public void update(String title, String description, Integer price,
-                       UUID categoryId, List<String> imageUrls) {
+                       UUID categoryId, List<String> imageUrls, boolean requiresInspection) {
         validate(title, price);
         this.title = title;
         this.description = description;
         this.price = price;
         this.categoryId = categoryId;
+
+        if (this.inspectionStatus != InspectionStatus.PASSED
+                && this.inspectionStatus != InspectionStatus.FAILED) {
+            if (requiresInspection) {
+                this.status           = ProductStatus.PENDING_INSPECTION;
+                this.inspectionStatus = InspectionStatus.PENDING;
+            } else {
+                this.status           = ProductStatus.ON_SALE;
+                this.inspectionStatus = InspectionStatus.NONE;
+            }
+        }
 
         if (imageUrls != null) {
             this.images.clear(); // 기존 이미지 초기화 (orphanRemoval=true 설정 시 DB에서도 삭제됨)
@@ -209,13 +220,25 @@ public class Product {
         onUpdate();
     }
 
-    // 검수 불합격 → 판매자에게 반송
+    // 검수 불합격 → INSPECTION_REJECTED 상태로 전환
     public void failInspection(UUID inspectorId) {
         if (this.inspectionStatus != InspectionStatus.IN_PROGRESS) {
             throw new IllegalStateException("검수 중인 상품만 검수 불합격 처리할 수 있습니다.");
         }
         this.inspectionStatus = InspectionStatus.FAILED;
-        this.inspectorId = inspectorId;
+        this.status           = ProductStatus.INSPECTION_REJECTED;  // 추가
+        this.inspectorId      = inspectorId;
+        onUpdate();
+    }
+
+    // 검수 불합격 후 재검수 신청 (판매자가 상품 재발송) — 신규 추가
+    public void resubmitForInspection() {
+        if (this.inspectionStatus != InspectionStatus.FAILED) {
+            throw new IllegalStateException(
+                    "검수 불합격 상태인 상품만 재검수 신청할 수 있습니다. 현재 상태: " + this.inspectionStatus.getDescription());
+        }
+        this.inspectionStatus = InspectionStatus.PENDING;
+        this.status           = ProductStatus.PENDING_INSPECTION;
         onUpdate();
     }
 
