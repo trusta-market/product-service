@@ -111,26 +111,13 @@ public class ProductCommandService {
             throw new ProductAccessDeniedException(ProductErrorCode.PRODUCT_ACCESS_DENIED);
         }
 
-        productDomainService.validateStatusTransition(product.getStatus(), newStatus);
-
-        switch (newStatus) {
-            case RESERVED -> {
-                if (!product.isSaleable()) {
-                    throw new InvalidStatusTransitionException(ProductErrorCode.INVALID_STATUS_TRANSITION);
-                }
-                product.reserve();
-            }
-            case SOLD_OUT           -> product.completeSale();
-            case ON_SALE            -> {
-                if (product.getStatus() == ProductStatus.RESERVED) {
-                    product.cancelReservation();
-                } else {
-                    product.reopenForSale();
-                }
-            }
-            case PENDING_INSPECTION -> product.resubmitForInspection(); // 추가 — 검수반려 후 재검수 신청
-            default -> throw new InvalidStatusTransitionException(ProductErrorCode.INVALID_STATUS_TRANSITION);
+        // 전이 가능 여부 검증
+        if (!newStatus.canTransitionFrom(product.getStatus())) {
+            throw new InvalidStatusTransitionException(ProductErrorCode.INVALID_STATUS_TRANSITION);
         }
+
+        // 전이 실행 — switch 분기 제거
+        newStatus.execute(product);
 
         return productRepository.save(product);
     }
