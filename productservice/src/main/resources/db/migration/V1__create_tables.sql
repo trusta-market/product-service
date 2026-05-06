@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS p_products (
 
 CREATE TABLE IF NOT EXISTS p_product_images (
                                                 id           UUID    NOT NULL,
-                                                product_id   UUID,
+                                                product_id   UUID    NOT NULL,
                                                 image_url    VARCHAR(500),
     sort_order   INTEGER NOT NULL,
     is_thumbnail BOOLEAN NOT NULL,
@@ -50,4 +50,5 @@ CREATE TABLE IF NOT EXISTS p_product_images (
     PRIMARY KEY (id),
     CONSTRAINT fk_images_product
     FOREIGN KEY (product_id) REFERENCES p_products(id)
+    ON DELETE CASCADE
     );
