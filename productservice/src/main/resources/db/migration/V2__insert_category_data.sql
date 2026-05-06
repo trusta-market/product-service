@@ -74,4 +74,4 @@ SELECT gen_random_uuid(), '식품/건강', id, 1, 2, NULL, 'NEVER' FROM p_catego
 INSERT INTO p_categories (id, name, parent_id, depth, display_order, inspection_threshold, inspection_policy)
 SELECT gen_random_uuid(), '티켓/상품권', id, 1, 3, NULL, 'ALWAYS' FROM p_categories WHERE name = '생활/기타';
 INSERT INTO p_categories (id, name, parent_id, depth, display_order, inspection_threshold, inspection_policy)
-SELECT gen_random_uuid(), '도서/잡지', id, 1, 4, NULL, 'NEVER' FROM p_categories WHERE name = '생활/기타';
+SELECT gen_random_uuid(), '도서/잡지', id, 1, 4, NULL, 'NEVER' FROM p_categories WHERE name = '생활/기타';정
