@@ -11,8 +11,6 @@ CREATE TABLE IF NOT EXISTS p_categories (
     CHECK (inspection_policy IN ('ALWAYS', 'PRICE_BASED', 'NEVER')),
     CONSTRAINT fk_categories_parent
     FOREIGN KEY (parent_id) REFERENCES p_categories(id),
-
-    -- 같은 부모 아래 동일한 이름 중복 방지
     CONSTRAINT uq_category_name_per_parent
     UNIQUE (parent_id, name)
     );
@@ -36,7 +34,10 @@ CREATE TABLE IF NOT EXISTS p_products (
     inspection_status VARCHAR(30),
     created_at        TIMESTAMP,
     updated_at        TIMESTAMP,
-    PRIMARY KEY (id)
+    PRIMARY KEY (id),
+    -- 존재하지 않는 카테고리를 참조하는 상품 생성 방지
+    CONSTRAINT fk_products_category
+    FOREIGN KEY (category_id) REFERENCES p_categories(id)
     );
 
 CREATE TABLE IF NOT EXISTS p_product_images (
