@@ -55,7 +55,7 @@ public class Category {
                 ? this.inspectionThreshold
                 : CategoryThreshold.getThreshold(this.name);
     }
-    public boolean requiresInspection(int price) {
+    public boolean requiresInspection(Long price) {
         return switch (getEffectivePolicy()) {
             case ALWAYS      -> true;
             case NEVER       -> false;

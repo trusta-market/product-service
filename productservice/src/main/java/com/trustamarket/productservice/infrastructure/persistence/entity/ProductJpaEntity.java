@@ -8,7 +8,7 @@ import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -38,7 +38,7 @@ public class ProductJpaEntity {
     private String description;
 
     @Column(nullable = false)
-    private int price;
+    private Long price;
 
     @Enumerated(EnumType.STRING)
     private ProductGrade grade;
@@ -58,18 +58,18 @@ public class ProductJpaEntity {
 
     @CreatedDate // 자동 생성일 관리
     @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @LastModifiedDate // 자동 수정일 관리
     @Column(nullable = false)
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 
     @Builder
     public ProductJpaEntity(UUID id, UUID sellerId, UUID categoryId, String title,
-                            String description, int price, ProductGrade grade,
+                            String description, Long price, ProductGrade grade,
                             ProductStatus status, InspectionStatus inspectionStatus,
                             List<ProductImageJpaEntity> images,
-                            LocalDateTime createdAt, LocalDateTime updatedAt) {
+                            Instant createdAt, Instant updatedAt) {
         this.id = id;
         this.sellerId = sellerId;
         this.categoryId = categoryId;

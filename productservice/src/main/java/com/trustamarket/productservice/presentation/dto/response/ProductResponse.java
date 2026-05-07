@@ -9,7 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -25,14 +25,14 @@ public class ProductResponse {
     private final UUID categoryId;
     private final String title;
     private final String description;
-    private final int price;
+    private final Long price;
     private final ProductGrade grade;
     private final ProductStatus status;
     private final InspectionStatus inspectionStatus;
     private final boolean isInspectionVerified;
     private final List<ProductImageResponse> images;
-    private final LocalDateTime createdAt;
-    private final LocalDateTime updatedAt;
+    private final Instant createdAt;
+    private final Instant updatedAt;
 
     public static ProductResponse from(Product product) {
         if (product == null) return null;

@@ -21,9 +21,8 @@ public class ProductDocument {
     @Field(type = FieldType.Text, analyzer = "standard")
     private String title;
 
-    // Integer: 숫자 범위 검색 가능 (가격 필터)
-    @Field(type = FieldType.Integer)
-    private int price;
+    @Field(type = FieldType.Long)
+    private Long price;
 
     // Keyword: 정확히 일치하는 값만 검색 (상태, ID 등)
     @Field(type = FieldType.Keyword)

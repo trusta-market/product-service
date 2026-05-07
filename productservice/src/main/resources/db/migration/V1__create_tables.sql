@@ -28,12 +28,12 @@ CREATE TABLE IF NOT EXISTS p_products (
                                           inspector_id      UUID,
                                           title             VARCHAR(100) NOT NULL,
     description       TEXT,
-    price             INTEGER      NOT NULL,
+    price             BIGINT      NOT NULL,
     grade             VARCHAR(20),
     status            VARCHAR(30),
     inspection_status VARCHAR(30),
-    created_at        TIMESTAMP,
-    updated_at        TIMESTAMP,
+    created_at        TIMESTAMPTZ,
+    updated_at        TIMESTAMPTZ,
     PRIMARY KEY (id),
     -- 존재하지 않는 카테고리를 참조하는 상품 생성 방지
     CONSTRAINT fk_products_category
@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS p_product_images (
     sort_order   INTEGER NOT NULL,
     is_thumbnail BOOLEAN NOT NULL,
     is_deleted   BOOLEAN NOT NULL,
-    deleted_at   TIMESTAMP NULL,
+    deleted_at   TIMESTAMPTZ NULL,
     PRIMARY KEY (id),
     CONSTRAINT fk_images_product
     FOREIGN KEY (product_id) REFERENCES p_products(id)
