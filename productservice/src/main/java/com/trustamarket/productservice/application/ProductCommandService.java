@@ -38,7 +38,7 @@ public class ProductCommandService {
     // 카테고리별 임계치(`Category.getEffectiveThreshold()`)와 가격을 비교해 검수 필요 여부 결정.
     // - 가격 ≥ 임계치 (고가): PENDING_INSPECTION + InspectionStatus.PENDING
     // - 가격 < 임계치 (저가): ON_SALE 즉시 + InspectionStatus.NONE
-    public Product create(UUID sellerId, String title, String description, Integer price, UUID categoryId, List<String> imageUrls) {
+    public Product create(UUID sellerId, String title, String description, Long price, UUID categoryId, List<String> imageUrls) {
         // 1. 카테고리 조회 (없으면 404)
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new CategoryNotFoundException(ProductErrorCode.CATEGORY_NOT_FOUND));
@@ -69,7 +69,7 @@ public class ProductCommandService {
 
     // 상품 수정
     public Product update(UUID productId, UUID sellerId, String title,
-                          String description, int price, UUID categoryId, List<String> imageUrls) {
+                          String description, Long price, UUID categoryId, List<String> imageUrls) {
 
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));

@@ -8,7 +8,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.*;
 
 @Entity
@@ -41,7 +41,7 @@ public class Product {
     private String description;
 
     @Column(nullable = false)
-    private Integer price;
+    private Long price;
 
     @Enumerated(EnumType.STRING)
     private ProductGrade grade;
@@ -59,11 +59,11 @@ public class Product {
     @JoinColumn(name = "product_id")
     private List<ProductImage> images;
 
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private Instant createdAt;
+    private Instant updatedAt;
 
     private Product(UUID sellerId, UUID categoryId, String title,
-                    String description, Integer price, ProductGrade grade, boolean requiresInspection) {
+                    String description, Long price, ProductGrade grade, boolean requiresInspection) {
         validate(title, price);
         this.sellerId = sellerId;
         this.categoryId = categoryId;
@@ -78,14 +78,14 @@ public class Product {
                 ? InspectionStatus.PENDING
                 : InspectionStatus.NONE;
         this.images = new ArrayList<>();
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        this.createdAt = Instant.now();
+        this.updatedAt = Instant.now();
     }
 
 
     // 상품등록
     public static Product create(UUID sellerId, UUID categoryId, String title,
-                                 String description, Integer price, ProductGrade grade, boolean requiresInspection, List<String> imageUrls) {
+                                 String description, Long price, ProductGrade grade, boolean requiresInspection, List<String> imageUrls) {
         // 1. 기본 정보로 상품 생성
         Product product = new Product(sellerId, categoryId, title, description, price, grade, requiresInspection);
 
@@ -101,14 +101,14 @@ public class Product {
 
     // db에 저장디어있던 id나 등록시간 같은걸 다시 살려낸다
     public static Product restore(UUID id, UUID sellerId, UUID categoryId, UUID inspectorId, String title,
-                                  String description, Integer price, ProductGrade grade,
+                                  String description, Long price, ProductGrade grade,
                                   ProductStatus status, InspectionStatus inspectionStatus, List<ProductImage> images,
-                                  LocalDateTime createdAt, LocalDateTime updatedAt) {
+                                  Instant createdAt, Instant updatedAt) {
         Product product = new Product();
         product.id = id;
         product.sellerId = sellerId;
         product.categoryId = categoryId;
-        product.inspectorId = inspectorId;   // 검수 행위자 audit trail — 누락 시 검수 이력 손실
+        product.inspectorId = inspectorId;
         product.title = title;
         product.description = description;
         product.price = price;
@@ -123,7 +123,7 @@ public class Product {
 
 
     // 제목, 가격 같은 상세내용 수정
-    public void update(String title, String description, Integer price,
+    public void update(String title, String description, Long price,
                        UUID categoryId, List<String> imageUrls, boolean requiresInspection) {
         validate(title, price);
         this.title = title;
@@ -352,7 +352,7 @@ public class Product {
 
     // 상품정보 수정시 완료시간 확인
     private void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = Instant.now();
     }
 
     // 삭제되지 않은 유효한 이미지 중 첫 번째 이미지를 찾는 보조 메서드
@@ -370,7 +370,7 @@ public class Product {
     }
 
     // 상품정보 확인
-    private void validate(String title, Integer price) {
+    private void validate(String title, Long price) {
         if (title == null || title.isBlank()) {
             throw new IllegalArgumentException("상품명은 필수입니다.");
         }

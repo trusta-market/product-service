@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 public class ProductDomainService {
 
     // 카테고리 정책(ALWAYS/PRICE_BASED/NEVER) + 가격으로 검수 필요 여부 판단
-    public boolean requiresInspection(Category category, int price) {
+    public boolean requiresInspection(Category category, Long price) {
         return category.requiresInspection(price);
     }
 

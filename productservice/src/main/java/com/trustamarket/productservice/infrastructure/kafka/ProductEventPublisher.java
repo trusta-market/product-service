@@ -66,7 +66,7 @@ public class ProductEventPublisher implements ProductEventPublishPort {
             UUID productId,
             UUID sellerId,
             UUID categoryId,
-            int price,
+            Long price,
             String inspectionStatus
     ) {}
 }

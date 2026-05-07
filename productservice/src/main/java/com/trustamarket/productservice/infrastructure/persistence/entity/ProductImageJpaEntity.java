@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -33,11 +33,11 @@ public class ProductImageJpaEntity {
     private boolean isDeleted = false;
 
     // 삭제된 시간을 저장하기 위한 컬럼
-    private LocalDateTime deletedAt;
+    private Instant deletedAt;
 
     @Builder
     public ProductImageJpaEntity(UUID id, String imageUrl,
-                                 int sortOrder, boolean isThumbnail, boolean isDeleted, LocalDateTime deletedAt) {
+                                 int sortOrder, boolean isThumbnail, boolean isDeleted, Instant deletedAt) {
         this.id = id;
         this.imageUrl = imageUrl;
         this.sortOrder = sortOrder;

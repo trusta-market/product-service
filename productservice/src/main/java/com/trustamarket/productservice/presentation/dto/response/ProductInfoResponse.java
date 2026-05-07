@@ -12,7 +12,7 @@ public record ProductInfoResponse(
         UUID id,
         UUID sellerId,
         String title,
-        Integer price,
+        Long price,
         ProductStatus status
 ) {
     public static ProductInfoResponse from(Product product) {
