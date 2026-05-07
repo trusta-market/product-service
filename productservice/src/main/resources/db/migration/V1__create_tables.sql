@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS p_product_images (
     sort_order   INTEGER NOT NULL,
     is_thumbnail BOOLEAN NOT NULL,
     is_deleted   BOOLEAN NOT NULL,
+    deleted_at   TIMESTAMP NULL,
     PRIMARY KEY (id),
     CONSTRAINT fk_images_product
     FOREIGN KEY (product_id) REFERENCES p_products(id)
