@@ -13,6 +13,8 @@ public enum InspectionStatus {
 
     IN_PROGRESS("검수 중"),
 
+    PRICE_SUGGESTED("가격 제안됨"),
+
     PASSED("검수 완료"),
 
     FAILED("검수 불합격");
