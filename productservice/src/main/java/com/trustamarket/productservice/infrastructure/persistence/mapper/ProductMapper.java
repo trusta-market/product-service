@@ -26,7 +26,8 @@ public class ProductMapper {
                 .categoryId(product.getCategoryId())
                 .title(product.getTitle())
                 .description(product.getDescription())
-                .price(product.getPrice()) // Integer 타입 대응
+                .price(product.getPrice())
+                .suggestedPrice(product.getSuggestedPrice())
                 .grade(product.getGrade())
                 .status(product.getStatus())
                 .inspectionStatus(product.getInspectionStatus())
@@ -53,6 +54,7 @@ public class ProductMapper {
                 entity.getTitle(),
                 entity.getDescription(),
                 entity.getPrice(),
+                entity.getSuggestedPrice(),
                 entity.getGrade(),
                 entity.getStatus(),
                 entity.getInspectionStatus(),
