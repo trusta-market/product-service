@@ -40,6 +40,10 @@ public class ProductJpaEntity {
     @Column(nullable = false)
     private Long price;
 
+    // inspection-service가 제안한 가격. PRICE_SUGGESTED 상태일 때만 유효.
+    @Column
+    private Long suggestedPrice;
+
     @Enumerated(EnumType.STRING)
     private ProductGrade grade;
 
@@ -66,7 +70,7 @@ public class ProductJpaEntity {
 
     @Builder
     public ProductJpaEntity(UUID id, UUID sellerId, UUID categoryId, String title,
-                            String description, Long price, ProductGrade grade,
+                            String description, Long price, Long suggestedPrice, ProductGrade grade,
                             ProductStatus status, InspectionStatus inspectionStatus,
                             List<ProductImageJpaEntity> images,
                             Instant createdAt, Instant updatedAt) {
@@ -76,6 +80,7 @@ public class ProductJpaEntity {
         this.title = title;
         this.description = description;
         this.price = price;
+        this.suggestedPrice = suggestedPrice;
         this.grade = grade;
         this.status = status;
         this.inspectionStatus = inspectionStatus;
