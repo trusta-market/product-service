@@ -43,6 +43,10 @@ public class Product {
     @Column(nullable = false)
     private Long price;
 
+    // inspection-service가 제안한 가격. PRICE_SUGGESTED 상태일 때만 유효하며, 판매자가 수락하면 price를 이 값으로 교체한다.
+    @Column
+    private Long suggestedPrice;
+
     @Enumerated(EnumType.STRING)
     private ProductGrade grade;
 
@@ -101,7 +105,7 @@ public class Product {
 
     // db에 저장디어있던 id나 등록시간 같은걸 다시 살려낸다
     public static Product restore(UUID id, UUID sellerId, UUID categoryId, UUID inspectorId, String title,
-                                  String description, Long price, ProductGrade grade,
+                                  String description, Long price, Long suggestedPrice, ProductGrade grade,
                                   ProductStatus status, InspectionStatus inspectionStatus, List<ProductImage> images,
                                   Instant createdAt, Instant updatedAt) {
         Product product = new Product();
@@ -112,6 +116,7 @@ public class Product {
         product.title = title;
         product.description = description;
         product.price = price;
+        product.suggestedPrice = suggestedPrice;
         product.grade = grade;
         product.status = status;
         product.inspectionStatus = inspectionStatus;
@@ -203,6 +208,49 @@ public class Product {
     // 검수 대상 여부 — 카테고리별 기준 금액과 비교
     public boolean requiresInspection(int highValueThreshold) {
         return this.price >= highValueThreshold;
+    }
+
+    // inspection-service로부터 검수 결과(등급 + 제안가격) 수신.
+    // PRICE_SUGGESTED 상태로 전환하여 판매자의 수락/거절을 기다린다.
+    public void receiveInspectionResult(ProductGrade inspectedGrade, Long suggestedPrice, UUID inspectorId) {
+        if (this.inspectionStatus != InspectionStatus.IN_PROGRESS) {
+            throw new IllegalStateException("검수 중인 상품만 검수 결과를 받을 수 있습니다. 현재 상태: " + this.inspectionStatus.getDescription());
+        }
+        if (inspectedGrade == null) {
+            throw new IllegalArgumentException("검수 등급은 필수입니다.");
+        }
+        if (suggestedPrice == null || suggestedPrice < 0) {
+            throw new IllegalArgumentException("제안 가격은 0원 이상이어야 합니다.");
+        }
+        this.grade = inspectedGrade;
+        this.suggestedPrice = suggestedPrice;
+        this.inspectorId = inspectorId;
+        this.inspectionStatus = InspectionStatus.PRICE_SUGGESTED;
+        this.status = ProductStatus.PENDING_INSPECTION; // 판매자 결정 전까지 판매 불가
+        onUpdate();
+    }
+
+    // 판매자가 제안가격 수락 → suggestedPrice를 price로 교체, ON_SALE 전환 (상품 등록 완료)
+    public void acceptInspectionResult() {
+        if (this.inspectionStatus != InspectionStatus.PRICE_SUGGESTED) {
+            throw new IllegalStateException("가격 제안 상태인 상품만 수락할 수 있습니다. 현재 상태: " + this.inspectionStatus.getDescription());
+        }
+        this.price = this.suggestedPrice;
+        this.suggestedPrice = null;
+        this.inspectionStatus = InspectionStatus.PASSED;
+        this.status = ProductStatus.ON_SALE;
+        onUpdate();
+    }
+
+    // 판매자가 제안가격 거절 → INSPECTION_REJECTED 전환 (재검수 신청 가능)
+    public void rejectInspectionResult() {
+        if (this.inspectionStatus != InspectionStatus.PRICE_SUGGESTED) {
+            throw new IllegalStateException("가격 제안 상태인 상품만 거절할 수 있습니다. 현재 상태: " + this.inspectionStatus.getDescription());
+        }
+        this.suggestedPrice = null;
+        this.inspectionStatus = InspectionStatus.FAILED;
+        this.status = ProductStatus.INSPECTION_REJECTED;
+        onUpdate();
     }
 
     // 검수 통과 → 등급 확정 + 상세페이지 검수완료 뱃지 표시
