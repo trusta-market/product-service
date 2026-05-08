@@ -1,9 +1,6 @@
 package com.trustamarket.productservice.application;
 
-import com.trustamarket.productservice.application.event.ProductCreatedEvent;
-import com.trustamarket.productservice.application.event.ProductDeletedEvent;
-import com.trustamarket.productservice.application.event.ProductInspectedEvent;
-import com.trustamarket.productservice.application.event.ProductUpdatedEvent;
+import com.trustamarket.productservice.application.event.*;
 import com.trustamarket.productservice.application.exception.CategoryNotFoundException;
 import com.trustamarket.productservice.application.exception.InvalidStatusTransitionException;
 import com.trustamarket.productservice.application.exception.ProductAccessDeniedException;
@@ -152,6 +149,49 @@ public class ProductCommandService {
 
         product.failInspection(inspectorId);
         return productRepository.save(product);
+    }
+
+    // 등급 + 제안가격을 저장하고 PRICE_SUGGESTED 상태로 전환. 판매자 결정 대기.
+    public Product receiveInspectionResult(UUID productId, ProductGrade grade,
+                                           Long suggestedPrice, UUID inspectorId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
+
+        product.receiveInspectionResult(grade, suggestedPrice, inspectorId);
+        Product saved = productRepository.save(product);
+        eventPublisher.publishEvent(new InspectionResultReceivedEvent(saved)); // ES 재인덱싱
+        return saved;
+    }
+
+    // 판매자 수락 → price = suggestedPrice, ON_SALE (상품 등록 완료)
+    public Product acceptInspectionResult(UUID productId, UUID sellerId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
+
+        if (!product.isOwnedBy(sellerId)) {
+            throw new ProductAccessDeniedException(ProductErrorCode.PRODUCT_ACCESS_DENIED);
+        }
+
+        product.acceptInspectionResult();
+        Product saved = productRepository.save(product);
+        eventPublisher.publishEvent(new ProductInspectedEvent(saved));       // ES 인덱싱
+        eventPublisher.publishEvent(new InspectionAcceptedEvent(saved));     // Kafka 발행
+        return saved;
+    }
+
+    // 판매자 거절 → INSPECTION_REJECTED
+    public Product rejectInspectionResult(UUID productId, UUID sellerId, String reason) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
+
+        if (!product.isOwnedBy(sellerId)) {
+            throw new ProductAccessDeniedException(ProductErrorCode.PRODUCT_ACCESS_DENIED);
+        }
+
+        product.rejectInspectionResult();
+        Product saved = productRepository.save(product);
+        eventPublisher.publishEvent(new InspectionRejectedEvent(saved, reason)); // Kafka 발행
+        return saved;
     }
 
     // 주문 확정 이벤트 (Kafka order.product.sold-out) 수신 시 호출. 시스템 호출이라 sellerId 검증 X.

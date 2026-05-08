@@ -26,6 +26,7 @@ public class ProductResponse {
     private final String title;
     private final String description;
     private final Long price;
+    private final Long suggestedPrice;
     private final ProductGrade grade;
     private final ProductStatus status;
     private final InspectionStatus inspectionStatus;
@@ -44,6 +45,7 @@ public class ProductResponse {
                 .title(product.getTitle())
                 .description(product.getDescription())
                 .price(product.getPrice())
+                .suggestedPrice(product.getSuggestedPrice())
                 .grade(product.getGrade())
                 .status(product.getStatus())
                 .inspectionStatus(product.getInspectionStatus())

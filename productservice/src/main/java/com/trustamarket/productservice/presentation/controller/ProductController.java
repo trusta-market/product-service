@@ -4,6 +4,7 @@ import com.trustamarket.productservice.application.ProductCommandService;
 import com.trustamarket.productservice.application.ProductQueryService;
 import com.trustamarket.productservice.domain.product.Product;
 import com.trustamarket.productservice.domain.product.ProductGrade;
+import com.trustamarket.productservice.presentation.dto.request.InspectionResultRequest;
 import com.trustamarket.productservice.presentation.dto.request.ProductCreateRequest;
 import com.trustamarket.productservice.presentation.dto.request.ProductStatusChangeRequest;
 import com.trustamarket.productservice.presentation.dto.request.ProductUpdateRequest;
@@ -151,5 +152,19 @@ public class ProductController {
     @PatchMapping("/{productId}/inspection/fail")
     public ProductResponse failInspection(@PathVariable UUID productId, @RequestHeader("X-User-Id") UUID inspectorId) {
         return ProductResponse.from(productCommandService.failInspection(productId,inspectorId));
+    }
+
+    // 판매자 검수 결과 수락/거절
+    @PostMapping("/{productId}/inspection-result")
+    public ProductResponse respondToInspectionResult(
+            @PathVariable UUID productId,
+            @RequestHeader("X-User-Id") UUID sellerId,
+            @Valid @RequestBody InspectionResultRequest request
+    ) {
+        Product product = Boolean.TRUE.equals(request.getAccepted())
+                ? productCommandService.acceptInspectionResult(productId, sellerId)
+                : productCommandService.rejectInspectionResult(productId, sellerId, request.getReason());
+
+        return ProductResponse.from(product);
     }
 }
