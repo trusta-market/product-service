@@ -19,6 +19,10 @@ public class ProductEventPublisher implements ProductEventPublishPort {
     // 다른 서비스가 구독할 토픽명
     private static final String PRODUCT_CREATED_TOPIC = "product.created";
     private static final String PRODUCT_DELETED_TOPIC  = "product.deleted";
+    private static final String INSPECTION_REQUESTED_TOPIC      = "inspection.requested";
+    private static final String INSPECTION_PRICE_ACCEPTED_TOPIC = "inspection.price.accepted";
+    private static final String INSPECTION_PRICE_REJECTED_TOPIC = "inspection.price.rejected";
+
 
     // 상품 등록 이벤트 발행
     // Kafka 실패해도 상품 등록에 영향 없도록 예외 처리
@@ -60,6 +64,56 @@ public class ProductEventPublisher implements ProductEventPublishPort {
         }
     }
 
+    // 검수 요청 이벤트 발행 (inspection-service가 구독)
+    @Override
+    public void publishInspectionRequested(Product product) {
+        try {
+            InspectionRequestedEvent event = new InspectionRequestedEvent(
+                    product.getId(),
+                    product.getSellerId(),
+                    product.getCategoryId(),
+                    product.getPrice(),
+                    product.getTitle()
+            );
+            kafkaTemplate.send(INSPECTION_REQUESTED_TOPIC, product.getId().toString(), event);
+            log.info("InspectionRequestedEvent 발행 완료 - productId: {}", product.getId());
+        } catch (Exception e) {
+            log.error("InspectionRequestedEvent 발행 실패 - productId: {}", product.getId(), e);
+        }
+    }
+
+    // 판매자 수락 이벤트 발행 (inspection-service가 구독 → ACCEPTED 처리)
+    @Override
+    public void publishInspectionPriceAccepted(Product product) {
+        try {
+            InspectionPriceAcceptedEvent event = new InspectionPriceAcceptedEvent(
+                    product.getId(),
+                    product.getSellerId(),
+                    product.getPrice()  // 수락 후 확정된 최종가격
+            );
+            kafkaTemplate.send(INSPECTION_PRICE_ACCEPTED_TOPIC, product.getId().toString(), event);
+            log.info("InspectionPriceAcceptedEvent 발행 완료 - productId: {}", product.getId());
+        } catch (Exception e) {
+            log.error("InspectionPriceAcceptedEvent 발행 실패 - productId: {}", product.getId(), e);
+        }
+    }
+
+    // 판매자 거절 이벤트 발행 (inspection-service가 구독 → REJECTED 처리)
+    @Override
+    public void publishInspectionPriceRejected(Product product, String reason) {
+        try {
+            InspectionPriceRejectedEvent event = new InspectionPriceRejectedEvent(
+                    product.getId(),
+                    product.getSellerId(),
+                    reason
+            );
+            kafkaTemplate.send(INSPECTION_PRICE_REJECTED_TOPIC, product.getId().toString(), event);
+            log.info("InspectionPriceRejectedEvent 발행 완료 - productId: {}", product.getId());
+        } catch (Exception e) {
+            log.error("InspectionPriceRejectedEvent 발행 실패 - productId: {}", product.getId(), e);
+        }
+    }
+
     // Kafka로 보낼 이벤트 데이터 구조
     // record: Java 16+의 불변 데이터 클래스
     public record ProductCreatedEvent(
@@ -68,5 +122,28 @@ public class ProductEventPublisher implements ProductEventPublishPort {
             UUID categoryId,
             Long price,
             String inspectionStatus
+    ) {}
+
+    // inspection-service가 소비 → Inspection 도메인 객체 생성
+    public record InspectionRequestedEvent(
+            UUID productId,
+            UUID sellerId,
+            UUID categoryId,
+            Long price,
+            String title
+    ) {}
+
+    // inspection-service가 소비 → inspection.acceptPrice() 호출
+    public record InspectionPriceAcceptedEvent(
+            UUID productId,
+            UUID sellerId,
+            Long finalPrice
+    ) {}
+
+    // inspection-service가 소비 → inspection.rejectPrice() 호출
+    public record InspectionPriceRejectedEvent(
+            UUID productId,
+            UUID sellerId,
+            String reason
     ) {}
 }
