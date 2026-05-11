@@ -6,6 +6,7 @@ plugins {
 
 group = 'com.trustamarket'
 version = '0.0.1-SNAPSHOT'
+description = 'product-service'
 
 java {
 	toolchain {
@@ -30,23 +31,21 @@ repositories {
 }
 
 dependencies {
+	implementation 'com.trustamarket:common:0.0.1-SNAPSHOT'
+
+	// spring
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.kafka:spring-kafka'
-	compileOnly 'org.projectlombok:lombok'
-	runtimeOnly 'com.mysql:mysql-connector-j'
 	runtimeOnly 'org.postgresql:postgresql'
+
+
+	// lombok
+	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'org.springframework.kafka:spring-kafka-test'
-	testCompileOnly 'org.projectlombok:lombok'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-	testAnnotationProcessor 'org.projectlombok:lombok'
-	implementation 'com.trustamarket:common:0.0.1-SNAPSHOT'
 
 	// Querydsl 의존성
 	implementation 'com.querydsl:querydsl-jpa:5.1.0:jakarta'
@@ -65,6 +64,13 @@ dependencies {
 
 	// 다른 서비스 호출 (OpenFeign)
 	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+
+	// test
+	testCompileOnly 'org.projectlombok:lombok'
+	testAnnotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.kafka:spring-kafka-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 dependencyManagement {

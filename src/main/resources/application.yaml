@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: product-service
+
+  profiles:
+    active: local
+
+  config:
+    import: "optional:configserver:http://localhost:8888"
+
+  cloud:
+    config:
+      label: develop
+      fail-fast: false
+
+  main:
+    allow-bean-definition-overriding: true
