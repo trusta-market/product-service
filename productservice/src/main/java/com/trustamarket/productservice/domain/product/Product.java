@@ -137,7 +137,8 @@ public class Product {
         this.categoryId = categoryId;
 
         if (this.inspectionStatus != InspectionStatus.PASSED
-                && this.inspectionStatus != InspectionStatus.FAILED) {
+                && this.inspectionStatus != InspectionStatus.FAILED
+                && this.inspectionStatus != InspectionStatus.PRICE_SUGGESTED){
             if (requiresInspection) {
                 this.status           = ProductStatus.PENDING_INSPECTION;
                 this.inspectionStatus = InspectionStatus.PENDING;
