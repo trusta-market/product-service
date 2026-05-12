@@ -123,28 +123,7 @@ public class ProductController {
         );
     }
 
-    @PatchMapping("/{productId}/inspection/start")
-    public ProductResponse startInspection(@PathVariable UUID productId) {
-        UUID inspectorId = SecurityUtil.getCurrentUserIdOrThrow();
-        return ProductResponse.from(productCommandService.startInspection(productId, inspectorId));
-    }
-
-    @PatchMapping("/{productId}/inspection/complete")
-    public ProductResponse completeInspection(
-            @PathVariable UUID productId,
-            @RequestParam ProductGrade grade
-    ) {
-        UUID inspectorId = SecurityUtil.getCurrentUserIdOrThrow();
-        return ProductResponse.from(productCommandService.completeInspection(productId, grade, inspectorId));
-    }
-
-    @PatchMapping("/{productId}/inspection/fail")
-    public ProductResponse failInspection(@PathVariable UUID productId) {
-        UUID inspectorId = SecurityUtil.getCurrentUserIdOrThrow();
-        return ProductResponse.from(productCommandService.failInspection(productId, inspectorId));
-    }
-
-    @PostMapping("/{productId}/inspection-result")
+@PostMapping("/{productId}/inspection-result")
     public ProductResponse respondToInspectionResult(
             @PathVariable UUID productId,
             @Valid @RequestBody InspectionResultRequest request

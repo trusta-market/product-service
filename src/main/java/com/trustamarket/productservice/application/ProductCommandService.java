@@ -68,7 +68,6 @@ public class ProductCommandService {
     }
 
     // 검수 신청 — 판매자가 센터 선택 후 호출. inspection.requested 발행
-    @Transactional(readOnly = true)
     public void requestInspection(UUID productId, UUID sellerId, UUID centerId) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
@@ -78,6 +77,8 @@ public class ProductCommandService {
         if (product.getInspectionStatus() != InspectionStatus.PENDING) {
             throw new InvalidStatusTransitionException(ProductErrorCode.INVALID_STATUS_TRANSITION);
         }
+        product.submitForInspection();
+        productRepository.save(product);
         productEventPublishPort.publishInspectionRequested(
                 productId, sellerId, centerId, product.getPrice(), "KRW"
         );
@@ -139,38 +140,7 @@ public class ProductCommandService {
     }
 
 
-    // 검수 시작 (검수자용)
-    public Product startInspection(UUID productId, UUID inspectorId) {
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
-
-        product.startInspection(inspectorId);
-        return productRepository.save(product);
-    }
-
-    // 검수 완료 처리 — 등급 확정
-    public Product completeInspection(UUID productId, ProductGrade inspectedGrade, UUID inspectorId) {
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
-
-        product.completeInspection(inspectedGrade, inspectorId);
-        Product saved = productRepository.save(product);
-
-        eventPublisher.publishEvent(new ProductInspectedEvent(saved));
-
-        return saved;
-    }
-
-    // 검수 불합격 처리 (검수자용)
-    public Product failInspection(UUID productId, UUID inspectorId) {
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
-
-        product.failInspection(inspectorId);
-        return productRepository.save(product);
-    }
-
-    // 등급 + 제안가격을 저장하고 PRICE_SUGGESTED 상태로 전환. 판매자 결정 대기.
+// 등급 + 제안가격을 저장하고 PRICE_SUGGESTED 상태로 전환. 판매자 결정 대기.
     public Product receiveInspectionResult(UUID productId, ProductGrade grade,
                                            Long suggestedPrice, UUID inspectorId) {
         Product product = productRepository.findById(productId)
