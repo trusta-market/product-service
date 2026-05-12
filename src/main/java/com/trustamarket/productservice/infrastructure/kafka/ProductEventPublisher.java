@@ -64,21 +64,17 @@ public class ProductEventPublisher implements ProductEventPublishPort {
         }
     }
 
-    // 검수 요청 이벤트 발행 (inspection-service가 구독)
+    // 검수 요청 이벤트 발행 (inspection-service, delivery-service가 구독)
     @Override
-    public void publishInspectionRequested(Product product) {
+    public void publishInspectionRequested(UUID productId, UUID sellerId, UUID centerId, long originalPriceAmount, String currency) {
         try {
             InspectionRequestedEvent event = new InspectionRequestedEvent(
-                    product.getId(),
-                    product.getSellerId(),
-                    product.getCategoryId(),
-                    product.getPrice(),
-                    product.getTitle()
+                    productId, sellerId, centerId, originalPriceAmount, currency
             );
-            kafkaTemplate.send(INSPECTION_REQUESTED_TOPIC, product.getId().toString(), event);
-            log.info("InspectionRequestedEvent 발행 완료 - productId: {}", product.getId());
+            kafkaTemplate.send(INSPECTION_REQUESTED_TOPIC, productId.toString(), event);
+            log.info("InspectionRequestedEvent 발행 완료 - productId: {}", productId);
         } catch (Exception e) {
-            log.error("InspectionRequestedEvent 발행 실패 - productId: {}", product.getId(), e);
+            log.error("InspectionRequestedEvent 발행 실패 - productId: {}", productId, e);
         }
     }
 
@@ -124,13 +120,13 @@ public class ProductEventPublisher implements ProductEventPublishPort {
             String inspectionStatus
     ) {}
 
-    // inspection-service가 소비 → Inspection 도메인 객체 생성
+    // inspection-service, delivery-service가 소비 → Inspection 생성 및 배송 생성
     public record InspectionRequestedEvent(
             UUID productId,
             UUID sellerId,
-            UUID categoryId,
-            Long price,
-            String title
+            UUID centerId,
+            long originalPriceAmount,
+            String currency
     ) {}
 
     // inspection-service가 소비 → inspection.acceptPrice() 호출
