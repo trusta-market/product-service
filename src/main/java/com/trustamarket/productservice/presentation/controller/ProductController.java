@@ -1,9 +1,11 @@
 package com.trustamarket.productservice.presentation.controller;
 
+import com.trustamarket.common.util.SecurityUtil;
 import com.trustamarket.productservice.application.ProductCommandService;
 import com.trustamarket.productservice.application.ProductQueryService;
 import com.trustamarket.productservice.domain.product.Product;
 import com.trustamarket.productservice.domain.product.ProductGrade;
+import com.trustamarket.productservice.presentation.dto.request.InspectionRequestDto;
 import com.trustamarket.productservice.presentation.dto.request.InspectionResultRequest;
 import com.trustamarket.productservice.presentation.dto.request.ProductCreateRequest;
 import com.trustamarket.productservice.presentation.dto.request.ProductStatusChangeRequest;
@@ -28,14 +30,22 @@ public class ProductController {
     private final ProductCommandService productCommandService;
     private final ProductQueryService productQueryService;
 
+    @PostMapping("/{productId}/inspection")
+    @ResponseStatus(HttpStatus.OK)
+    public void requestInspection(
+            @PathVariable UUID productId,
+            @Valid @RequestBody InspectionRequestDto request
+    ) {
+        UUID sellerId = SecurityUtil.getCurrentUserIdOrThrow();
+        productCommandService.requestInspection(productId, sellerId, request.getCenterId());
+    }
 
-     // 상품 등록
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ProductResponse create(
-            @RequestHeader("X-User-Id") UUID sellerId,
             @Valid @RequestBody ProductCreateRequest request
     ) {
+        UUID sellerId = SecurityUtil.getCurrentUserIdOrThrow();
         Product product = productCommandService.create(
                 sellerId,
                 request.getTitle(),
@@ -47,15 +57,11 @@ public class ProductController {
         return ProductResponse.from(product);
     }
 
-
-     //상품 단건 조회
     @GetMapping("/{productId}")
     public ProductResponse findById(@PathVariable UUID productId) {
         return ProductResponse.from(productQueryService.findById(productId));
     }
 
-
-     // 판매자별 상품 목록 조회
     @GetMapping("/seller/{sellerId}")
     public Page<ProductResponse> findBySellerId(
             @PathVariable UUID sellerId,
@@ -65,8 +71,6 @@ public class ProductController {
                 .map(ProductResponse::from);
     }
 
-
-     // 카테고리별 상품 목록 조회
     @GetMapping("/category/{categoryId}")
     public Page<ProductResponse> findByCategoryId(
             @PathVariable UUID categoryId,
@@ -76,8 +80,6 @@ public class ProductController {
                 .map(ProductResponse::from);
     }
 
-
-     // 최신 상품 목록 조회
     @GetMapping("/latest")
     public List<ProductResponse> findLatest() {
         return productQueryService.findLatest().stream()
@@ -85,14 +87,12 @@ public class ProductController {
                 .collect(Collectors.toList());
     }
 
-
-     //상품 수정
     @PutMapping("/{productId}")
     public ProductResponse update(
             @PathVariable UUID productId,
-            @RequestHeader("X-User-Id") UUID sellerId,
             @Valid @RequestBody ProductUpdateRequest request
     ) {
+        UUID sellerId = SecurityUtil.getCurrentUserIdOrThrow();
         Product product = productCommandService.update(
                 productId,
                 sellerId,
@@ -105,66 +105,54 @@ public class ProductController {
         return ProductResponse.from(product);
     }
 
-
-     //상품 삭제
     @DeleteMapping("/{productId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(
-            @PathVariable UUID productId,
-            @RequestHeader("X-User-Id") UUID sellerId
-    ) {
+    public void delete(@PathVariable UUID productId) {
+        UUID sellerId = SecurityUtil.getCurrentUserIdOrThrow();
         productCommandService.deleteProduct(productId, sellerId);
     }
 
-
-    //상품 상태 변경
     @PatchMapping("/{productId}/status")
     public ProductResponse changeStatus(
             @PathVariable UUID productId,
-            @RequestHeader("X-User-Id") UUID sellerId,
             @Valid @RequestBody ProductStatusChangeRequest request
     ) {
+        UUID sellerId = SecurityUtil.getCurrentUserIdOrThrow();
         return ProductResponse.from(
                 productCommandService.changeStatus(productId, request.getStatus(), sellerId)
         );
     }
 
-
-    //검수 시작 (검수자 권한 필요 기능)
     @PatchMapping("/{productId}/inspection/start")
-    public ProductResponse startInspection(@PathVariable UUID productId, @RequestHeader("X-User-Id")UUID inspectorId) {
+    public ProductResponse startInspection(@PathVariable UUID productId) {
+        UUID inspectorId = SecurityUtil.getCurrentUserIdOrThrow();
         return ProductResponse.from(productCommandService.startInspection(productId, inspectorId));
     }
 
-
-    //검수 완료 및 등급 확정
     @PatchMapping("/{productId}/inspection/complete")
     public ProductResponse completeInspection(
             @PathVariable UUID productId,
-            @RequestParam ProductGrade grade,
-            @RequestHeader("X-User-Id") UUID inspectorId
+            @RequestParam ProductGrade grade
     ) {
+        UUID inspectorId = SecurityUtil.getCurrentUserIdOrThrow();
         return ProductResponse.from(productCommandService.completeInspection(productId, grade, inspectorId));
     }
 
-
-    //검수 불합격 처리
     @PatchMapping("/{productId}/inspection/fail")
-    public ProductResponse failInspection(@PathVariable UUID productId, @RequestHeader("X-User-Id") UUID inspectorId) {
-        return ProductResponse.from(productCommandService.failInspection(productId,inspectorId));
+    public ProductResponse failInspection(@PathVariable UUID productId) {
+        UUID inspectorId = SecurityUtil.getCurrentUserIdOrThrow();
+        return ProductResponse.from(productCommandService.failInspection(productId, inspectorId));
     }
 
-    // 판매자 검수 결과 수락/거절
     @PostMapping("/{productId}/inspection-result")
     public ProductResponse respondToInspectionResult(
             @PathVariable UUID productId,
-            @RequestHeader("X-User-Id") UUID sellerId,
             @Valid @RequestBody InspectionResultRequest request
     ) {
+        UUID sellerId = SecurityUtil.getCurrentUserIdOrThrow();
         Product product = Boolean.TRUE.equals(request.getAccepted())
                 ? productCommandService.acceptInspectionResult(productId, sellerId)
                 : productCommandService.rejectInspectionResult(productId, sellerId, request.getReason());
-
         return ProductResponse.from(product);
     }
 }

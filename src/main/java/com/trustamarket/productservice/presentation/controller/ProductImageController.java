@@ -1,5 +1,6 @@
 package com.trustamarket.productservice.presentation.controller;
 
+import com.trustamarket.common.util.SecurityUtil;
 import com.trustamarket.productservice.application.ProductImageAppService;
 import com.trustamarket.productservice.domain.product.Product;
 import com.trustamarket.productservice.domain.product.ProductImage;
@@ -24,52 +25,47 @@ public class ProductImageController {
 
     private final ProductImageAppService productImageAppService;
 
-    // 이미지 업로드
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
     public List<ProductImageResponse> addImage(
             @PathVariable UUID productId,
-            @RequestHeader("X-User-Id") UUID sellerId,
             @RequestPart("file") MultipartFile file
     ) {
+        UUID sellerId = SecurityUtil.getCurrentUserIdOrThrow();
         Product product = productImageAppService.addImage(productId, sellerId, file);
         return toActiveImageResponses(product);
     }
 
-    // 이미지 삭제
     @DeleteMapping("/{imageId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeImage(
             @PathVariable UUID productId,
-            @RequestHeader("X-User-Id") UUID sellerId,
             @PathVariable UUID imageId
     ) {
+        UUID sellerId = SecurityUtil.getCurrentUserIdOrThrow();
         productImageAppService.removeImage(productId, sellerId, imageId);
     }
 
-    // 대표 이미지 변경
     @PatchMapping("/{imageId}/thumbnail")
     public List<ProductImageResponse> changeThumbnail(
             @PathVariable UUID productId,
-            @RequestHeader("X-User-Id") UUID sellerId,
             @PathVariable UUID imageId
     ) {
+        UUID sellerId = SecurityUtil.getCurrentUserIdOrThrow();
         Product product = productImageAppService.changeThumbnail(productId, sellerId, imageId);
         return toActiveImageResponses(product);
     }
 
-    // 이미지 순서 변경
     @PatchMapping("/reorder")
     public List<ProductImageResponse> reorderImages(
             @PathVariable UUID productId,
-            @RequestHeader("X-User-Id") UUID sellerId,
             @Valid @RequestBody ProductImageReorderRequest request
     ) {
+        UUID sellerId = SecurityUtil.getCurrentUserIdOrThrow();
         Product product = productImageAppService.reorderImages(productId, sellerId, request.getImageIds());
         return toActiveImageResponses(product);
     }
 
-    // 응답 매핑 공통 — null 가드 + soft-delete 필터 일원화 (NPE/중복 코드 방지)
     private List<ProductImageResponse> toActiveImageResponses(Product product) {
         List<ProductImage> images = product.getImages() == null ? Collections.emptyList() : product.getImages();
         return images.stream()
