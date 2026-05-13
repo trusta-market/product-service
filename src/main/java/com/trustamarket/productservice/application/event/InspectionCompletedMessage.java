@@ -8,6 +8,6 @@ public record InspectionCompletedMessage(
         UUID productId,
         UUID inspectorId,
         ProductGrade grade,
-        Long suggestedPrice
+        Long suggestedPriceAmount
 ) {
 }

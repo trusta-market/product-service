@@ -1,5 +1,7 @@
 package com.trustamarket.productservice.application.event;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trustamarket.productservice.application.ProductCommandService;
 import com.trustamarket.productservice.application.exception.ProductNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -14,30 +16,37 @@ import org.springframework.stereotype.Component;
 public class InspectionCompletedListener {
 
     private final ProductCommandService productCommandService;
+    private final ObjectMapper objectMapper;
 
     @KafkaListener(
             topics = "${trusta.messaging.topic.inspection-completed}",
-            groupId = "product-inspection-completed-group",
-            containerFactory = "inspectionCompletedListenerContainerFactory"
+            groupId = "product-inspection-completed-group"
     )
-    public void consume(InspectionCompletedMessage message, Acknowledgment ack) {
-        log.info("[InspectionCompleted] 수신 - productId: {}, grade: {}, suggestedPrice: {}",
-                message.productId(), message.grade(), message.suggestedPrice());
+    public void consume(String payload, Acknowledgment ack) {
+        InspectionCompletedMessage message;
+        try {
+            message = objectMapper.readValue(payload, InspectionCompletedMessage.class);
+        } catch (JsonProcessingException e) {
+            log.error("[InspectionCompleted] 역직렬화 실패, skip — payload={}", payload, e);
+            ack.acknowledge();
+            return;
+        }
+
+        log.info("[InspectionCompleted] 수신 - productId: {}, grade: {}, suggestedPriceAmount: {}",
+                message.productId(), message.grade(), message.suggestedPriceAmount());
         try {
             productCommandService.receiveInspectionResult(
                     message.productId(),
                     message.grade(),
-                    message.suggestedPrice(),
+                    message.suggestedPriceAmount(),
                     message.inspectorId()
             );
             ack.acknowledge();
-            log.info("[InspectionCompleted] 처리 완료 - productId: {} → PRICE_SUGGESTED", message.productId());
+            log.info("[InspectionCompleted] 처리 완료 - productId: {}", message.productId());
         } catch (ProductNotFoundException e) {
-            // 상품이 없는 경우 — 재시도 불필요, ack 후 skip
             log.warn("[InspectionCompleted] 상품 없음, skip - productId: {}", message.productId(), e);
             ack.acknowledge();
         } catch (Exception e) {
-            // 일시적 오류 — ack 하지 않아 재시도 가능
             log.error("[InspectionCompleted] 처리 실패 - productId: {}", message.productId(), e);
             throw e;
         }

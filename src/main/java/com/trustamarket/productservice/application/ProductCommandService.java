@@ -6,8 +6,10 @@ import com.trustamarket.productservice.application.exception.InvalidStatusTransi
 import com.trustamarket.productservice.application.exception.ProductAccessDeniedException;
 import com.trustamarket.productservice.application.exception.ProductNotFoundException;
 import com.trustamarket.productservice.application.exception.errorcode.ProductErrorCode;
+import com.trustamarket.productservice.application.port.ProductEventPublishPort;
 import com.trustamarket.productservice.domain.category.Category;
 import com.trustamarket.productservice.domain.category.CategoryRepository;
+import com.trustamarket.productservice.domain.product.InspectionStatus;
 import com.trustamarket.productservice.domain.product.Product;
 import com.trustamarket.productservice.domain.product.ProductDomainService;
 import com.trustamarket.productservice.domain.product.ProductGrade;
@@ -30,6 +32,7 @@ public class ProductCommandService {
     private final CategoryRepository categoryRepository;
     private final ProductDomainService productDomainService;
     private final ApplicationEventPublisher eventPublisher;
+    private final ProductEventPublishPort productEventPublishPort;
 
     // 상품 등록
     // 카테고리별 임계치(`Category.getEffectiveThreshold()`)와 가격을 비교해 검수 필요 여부 결정.
@@ -62,6 +65,23 @@ public class ProductCommandService {
         Product savedProduct = productRepository.save(product);
         eventPublisher.publishEvent(new ProductCreatedEvent(savedProduct));
         return savedProduct;
+    }
+
+    // 검수 신청 — 판매자가 센터 선택 후 호출. inspection.requested 발행
+    public void requestInspection(UUID productId, UUID sellerId, UUID centerId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
+        if (!product.isOwnedBy(sellerId)) {
+            throw new ProductAccessDeniedException(ProductErrorCode.PRODUCT_ACCESS_DENIED);
+        }
+        if (product.getInspectionStatus() != InspectionStatus.PENDING) {
+            throw new InvalidStatusTransitionException(ProductErrorCode.INVALID_STATUS_TRANSITION);
+        }
+        product.submitForInspection();
+        productRepository.save(product);
+        productEventPublishPort.publishInspectionRequested(
+                productId, sellerId, centerId, product.getPrice(), "KRW"
+        );
     }
 
     // 상품 수정
@@ -120,38 +140,7 @@ public class ProductCommandService {
     }
 
 
-    // 검수 시작 (검수자용)
-    public Product startInspection(UUID productId, UUID inspectorId) {
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
-
-        product.startInspection(inspectorId);
-        return productRepository.save(product);
-    }
-
-    // 검수 완료 처리 — 등급 확정
-    public Product completeInspection(UUID productId, ProductGrade inspectedGrade, UUID inspectorId) {
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
-
-        product.completeInspection(inspectedGrade, inspectorId);
-        Product saved = productRepository.save(product);
-
-        eventPublisher.publishEvent(new ProductInspectedEvent(saved));
-
-        return saved;
-    }
-
-    // 검수 불합격 처리 (검수자용)
-    public Product failInspection(UUID productId, UUID inspectorId) {
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
-
-        product.failInspection(inspectorId);
-        return productRepository.save(product);
-    }
-
-    // 등급 + 제안가격을 저장하고 PRICE_SUGGESTED 상태로 전환. 판매자 결정 대기.
+// 등급 + 제안가격을 저장하고 PRICE_SUGGESTED 상태로 전환. 판매자 결정 대기.
     public Product receiveInspectionResult(UUID productId, ProductGrade grade,
                                            Long suggestedPrice, UUID inspectorId) {
         Product product = productRepository.findById(productId)

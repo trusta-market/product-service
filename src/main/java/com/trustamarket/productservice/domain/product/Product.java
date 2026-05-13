@@ -195,18 +195,17 @@ public class Product {
         onUpdate();
     }
 
-    // 검수 시작 (검수자가 상품 수령 후)
-    public void startInspection(UUID inspectorId) {
+    // 검수 신청 (판매자 → inspection-service로 요청 전송 시)
+    public void submitForInspection() {
         if (this.inspectionStatus != InspectionStatus.PENDING) {
             throw new IllegalStateException(
-                    "검수 대기 상태인 상품만 검수를 시작할 수 있습니다. 현재 상태: " + this.inspectionStatus.getDescription());
+                    "검수 대기 상태인 상품만 검수를 신청할 수 있습니다. 현재 상태: " + this.inspectionStatus.getDescription());
         }
         this.inspectionStatus = InspectionStatus.IN_PROGRESS;
-        this.inspectorId = inspectorId;
         onUpdate();
     }
 
-    // 검수 대상 여부 — 카테고리별 기준 금액과 비교
+// 검수 대상 여부 — 카테고리별 기준 금액과 비교
     public boolean requiresInspection(int highValueThreshold) {
         return this.price >= highValueThreshold;
     }
@@ -254,29 +253,13 @@ public class Product {
         onUpdate();
     }
 
-    // 검수 통과 → 등급 확정 + 상세페이지 검수완료 뱃지 표시
-    public void completeInspection(ProductGrade inspectedGrade, UUID inspectorId) {
-        if (this.inspectionStatus != InspectionStatus.IN_PROGRESS) {
-            throw new IllegalStateException("검수 중인 상품만 등급을 확정할 수 있습니다.");
-        }
-        if (inspectedGrade == null) {
-            throw new IllegalArgumentException("검수 등급은 필수입니다.");
-        }
-        this.grade = inspectedGrade;
-        this.inspectionStatus = InspectionStatus.PASSED;
-        this.status = ProductStatus.ON_SALE;
-        this.inspectorId = inspectorId;
-        onUpdate();
-    }
-
-    // 검수 불합격 → INSPECTION_REJECTED 상태로 전환
-    public void failInspection(UUID inspectorId) {
+    // 검수 불합격 → INSPECTION_REJECTED 상태로 전환 (inspection.failed 이벤트 수신 시)
+    public void failInspection() {
         if (this.inspectionStatus != InspectionStatus.IN_PROGRESS) {
             throw new IllegalStateException("검수 중인 상품만 검수 불합격 처리할 수 있습니다.");
         }
         this.inspectionStatus = InspectionStatus.FAILED;
-        this.status           = ProductStatus.INSPECTION_REJECTED;  // 추가
-        this.inspectorId      = inspectorId;
+        this.status           = ProductStatus.INSPECTION_REJECTED;
         onUpdate();
     }
 

@@ -8,8 +8,8 @@ public interface ProductEventPublishPort {
     void publishProductCreated(Product product);
     void publishProductDeleted(UUID productId);
 
-    // 검수 요청 — product-service → inspection-service
-    void publishInspectionRequested(Product product);
+    // 검수 요청 — product-service → inspection-service, delivery-service
+    void publishInspectionRequested(UUID productId, UUID sellerId, UUID centerId, long originalPriceAmount, String currency);
 
     // 판매자 수락 — product-service → inspection-service
     void publishInspectionPriceAccepted(Product product);

@@ -2,7 +2,6 @@ package com.trustamarket.productservice.application.event;
 
 import com.trustamarket.productservice.application.port.ProductSearchPort;
 import com.trustamarket.productservice.application.port.ProductEventPublishPort;
-import com.trustamarket.productservice.domain.product.InspectionStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -21,11 +20,6 @@ public class ProductEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleProductCreated(ProductCreatedEvent event) {
         productEventPublishPort.publishProductCreated(event.getProduct());
-
-        if (event.getProduct().getInspectionStatus() == InspectionStatus.PENDING) {
-            productEventPublishPort.publishInspectionRequested(event.getProduct());
-            log.info("검수 요청 이벤트 발행 - productId: {}", event.getProduct().getId());
-        }
     }
 
     // 상품 수정 후 처리
