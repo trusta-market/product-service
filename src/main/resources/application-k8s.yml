@@ -33,6 +33,13 @@ spring:
   data:
     elasticsearch:
       uris: http://localhost:9200    # placeholder 만 채움. 실제 호출 X (autoconfig exclude 상태)
+  # Flyway — 기존 schema 에 history table 자동 초기화 (config-repo 의 -local.yml 패턴 그대로)
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    schemas: p_product
+    baseline-on-migrate: true
+    baseline-version: 0
 
 eureka:
   client:
