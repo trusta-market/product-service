@@ -59,6 +59,17 @@ cloud:
     s3:
       bucket: dummy
 
+# trusta 메시징 토픽 — config-repo 의 product-service-local.yml 에서 복사.
+trusta:
+  security:
+    trust-gateway-headers: true
+  messaging:
+    topic:
+      product-sold-out: order.product.sold-out
+      inspection-completed: inspection.completed
+      inspection-price-accepted: inspection.price.accepted
+      inspection-price-rejected: inspection.price.rejected
+
 eureka:
   client:
     service-url:
