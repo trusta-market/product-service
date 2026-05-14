@@ -19,6 +19,7 @@ public class ProductImageJpaEntity {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
+    // 양방향 관계 — product_id FK를 이 쪽에서 직접 관리
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
     private ProductJpaEntity product;
@@ -47,8 +48,8 @@ public class ProductImageJpaEntity {
         this.isDeleted = isDeleted;
         this.deletedAt = deletedAt;
     }
-    
-    public void assignProduct(ProductJpaEntity product) {
+
+    void assignProduct(ProductJpaEntity product) {
         this.product = product;
     }
 }
