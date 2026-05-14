@@ -1,0 +1,41 @@
+# K8s 환경 전용 override (SPRING_PROFILES_ACTIVE=k8s 일 때만 로드).
+
+server:
+  port: 8102
+
+spring:
+  config:
+    import: "optional:configserver:http://config-server"
+  cloud:
+    config:
+      uri: http://config-server
+      label: develop
+      fail-fast: false
+  datasource:
+    url: jdbc:postgresql://postgres:5432/trusta_market
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        default_schema: p_product
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
+  # Elasticsearch / AWS S3 는 K8s 환경에서 미사용 — autoconfig 비활성 (startup 시 connection 실패 방지).
+  # 후속에 실제 ES / S3 셋업 시 이 exclude 제거 + 해당 URL 환경변수로 주입.
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchDataAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchRestClientAutoConfiguration
+      - org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-server/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
