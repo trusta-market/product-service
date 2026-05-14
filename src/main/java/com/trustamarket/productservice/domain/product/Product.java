@@ -1,6 +1,7 @@
 package com.trustamarket.productservice.domain.product;
 
 import com.trustamarket.productservice.application.exception.ImageNotFoundException;
+import com.trustamarket.productservice.application.exception.InvalidInspectionStatusException;
 import com.trustamarket.productservice.application.exception.errorcode.ProductErrorCode;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -214,8 +215,7 @@ public class Product {
     // PRICE_SUGGESTED 상태로 전환하여 판매자의 수락/거절을 기다린다.
     public void receiveInspectionResult(ProductGrade inspectedGrade, Long suggestedPrice, UUID inspectorId) {
         if (this.inspectionStatus != InspectionStatus.IN_PROGRESS) {
-            throw new IllegalStateException("검수 중인 상품만 검수 결과를 받을 수 있습니다. 현재 상태: " + this.inspectionStatus.getDescription());
-        }
+            throw new InvalidInspectionStatusException(ProductErrorCode.INVALID_INSPECTION_STATUS);        }
         if (inspectedGrade == null) {
             throw new IllegalArgumentException("검수 등급은 필수입니다.");
         }
