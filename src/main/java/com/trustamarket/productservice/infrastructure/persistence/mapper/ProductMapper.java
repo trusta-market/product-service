@@ -24,6 +24,7 @@ public class ProductMapper {
         var builder = ProductJpaEntity.builder()
                 .sellerId(product.getSellerId())
                 .categoryId(product.getCategoryId())
+                .inspectorId(product.getInspectorId())
                 .title(product.getTitle())
                 .description(product.getDescription())
                 .price(product.getPrice())
@@ -50,7 +51,7 @@ public class ProductMapper {
                 entity.getId(),
                 entity.getSellerId(),
                 entity.getCategoryId(),
-                null,   // inspectorId — JPA 엔티티에 컬럼 추가 후 entity.getInspectorId() 로 교체 (별도 마이그레이션)
+                entity.getInspectorId(),
                 entity.getTitle(),
                 entity.getDescription(),
                 entity.getPrice(),

@@ -15,3 +15,23 @@ spring:
 
   main:
     allow-bean-definition-overriding: true
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+internal:
+  secret: ${INTERNAL_SECRET:change-me-in-production}
+
+  # InspectionCompletedListener 등에서 참조하는 토픽명 프로퍼티
+  # config-server가 없는 로컬 환경에서도 기동 가능하도록 기본값 설정
+trusta:
+  messaging:
+    topic:
+      # inspection-service → product-service : 검수 완료 결과 수신
+      inspection-completed: inspection.completed
+      # order-service → product-service : 주문 확정 → SOLD_OUT 전환
+      product-sold-out: order.product.sold-out
+  security:
+    trust-gateway-headers: true

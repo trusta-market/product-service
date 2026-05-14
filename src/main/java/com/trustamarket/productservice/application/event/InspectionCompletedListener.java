@@ -20,7 +20,8 @@ public class InspectionCompletedListener {
 
     @KafkaListener(
             topics = "${trusta.messaging.topic.inspection-completed}",
-            groupId = "product-inspection-completed-group"
+            groupId = "product-inspection-completed-group",
+            containerFactory = "inspectionCompletedListenerContainerFactory"
     )
     public void consume(String payload, Acknowledgment ack) {
         InspectionCompletedMessage message;
@@ -45,6 +46,11 @@ public class InspectionCompletedListener {
             log.info("[InspectionCompleted] 처리 완료 - productId: {}", message.productId());
         } catch (ProductNotFoundException e) {
             log.warn("[InspectionCompleted] 상품 없음, skip - productId: {}", message.productId(), e);
+            ack.acknowledge();
+        } catch (IllegalStateException e) {
+            // 상태 불일치(이미 처리된 멱등성 케이스 등) — 재시도 불필요
+            log.warn("[InspectionCompleted] 상태 불일치, skip - productId: {}, reason: {}",
+                    message.productId(), e.getMessage());
             ack.acknowledge();
         } catch (Exception e) {
             log.error("[InspectionCompleted] 처리 실패 - productId: {}", message.productId(), e);

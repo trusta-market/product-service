@@ -31,6 +31,9 @@ public class ProductJpaEntity {
     @Column(nullable = false)
     private UUID categoryId;
 
+    @Column
+    private UUID inspectorId;
+
     @Column(nullable = false, length = 100)
     private String title;
 
@@ -69,7 +72,7 @@ public class ProductJpaEntity {
     private Instant updatedAt;
 
     @Builder
-    public ProductJpaEntity(UUID id, UUID sellerId, UUID categoryId, String title,
+    public ProductJpaEntity(UUID id, UUID sellerId, UUID categoryId, UUID inspectorId,String title,
                             String description, Long price, Long suggestedPrice, ProductGrade grade,
                             ProductStatus status, InspectionStatus inspectionStatus,
                             List<ProductImageJpaEntity> images,
@@ -77,6 +80,7 @@ public class ProductJpaEntity {
         this.id = id;
         this.sellerId = sellerId;
         this.categoryId = categoryId;
+        this.inspectorId = inspectorId;
         this.title = title;
         this.description = description;
         this.price = price;
