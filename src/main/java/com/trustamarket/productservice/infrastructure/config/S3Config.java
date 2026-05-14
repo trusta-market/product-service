@@ -8,6 +8,9 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import org.springframework.beans.factory.annotation.Value;
+import software.amazon.awssdk.services.s3.S3Configuration;
+
+import java.net.URI;
 
 @Configuration
 public class S3Config {
@@ -21,11 +24,13 @@ public class S3Config {
     @Value("${cloud.aws.region.static}")
     private String region;
 
+    private static final String REGION = "ap-southeast-2";
+
     @Bean
     public S3Client s3Client() {
         return S3Client.builder()
-                .region(Region.of(region))
-                .credentialsProvider(awsCredentialsProvider()) // 분리된 빈 사용
+                .region(Region.of(REGION))
+                .credentialsProvider(awsCredentialsProvider())
                 .build();
     }
 

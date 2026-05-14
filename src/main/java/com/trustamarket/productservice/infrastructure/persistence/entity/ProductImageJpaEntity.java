@@ -19,6 +19,10 @@ public class ProductImageJpaEntity {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id", nullable = false)
+    private ProductJpaEntity product;
+
     @Column(nullable = false)
     private String imageUrl;
 
@@ -28,11 +32,9 @@ public class ProductImageJpaEntity {
     @Column(nullable = false)
     private boolean isThumbnail;
 
-    // Soft Delete 상태를 DB에 저장하기 위한 컬럼
     @Column(nullable = false)
     private boolean isDeleted = false;
 
-    // 삭제된 시간을 저장하기 위한 컬럼
     private Instant deletedAt;
 
     @Builder
@@ -44,5 +46,9 @@ public class ProductImageJpaEntity {
         this.isThumbnail = isThumbnail;
         this.isDeleted = isDeleted;
         this.deletedAt = deletedAt;
+    }
+    
+    public void assignProduct(ProductJpaEntity product) {
+        this.product = product;
     }
 }
