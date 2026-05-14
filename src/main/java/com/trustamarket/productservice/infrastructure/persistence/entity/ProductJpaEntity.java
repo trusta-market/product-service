@@ -87,14 +87,13 @@ public class ProductJpaEntity {
         this.status = status;
         this.inspectionStatus = inspectionStatus;
         if (images != null) {
-            images.forEach(img -> img.assignProduct(this));
-            this.images = images;
+            this.images = new ArrayList<>(images);
+            this.images.forEach(img -> img.assignProduct(this));
         }
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
 
-    // 이미지 추가 시 양방향 관계 동시 세팅
     public void addImage(ProductImageJpaEntity image) {
         image.assignProduct(this);
         this.images.add(image);
