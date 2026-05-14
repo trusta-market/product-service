@@ -40,6 +40,10 @@ spring:
     schemas: p_product
     baseline-on-migrate: true
     baseline-version: 0
+  # Kafka — GKE namespace 'kafka' 의 StatefulSet 3 broker.
+  # 새 cluster (별도 CLUSTER_ID), 토픽은 초기화됨 — 각 서비스가 자동 생성 또는 명시 생성 필요.
+  kafka:
+    bootstrap-servers: kafka.kafka:9092
 
 eureka:
   client:
