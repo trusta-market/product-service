@@ -23,13 +23,16 @@ spring:
         default_schema: p_product
         dialect: org.hibernate.dialect.PostgreSQLDialect
     open-in-view: false
-  # Elasticsearch / AWS S3 는 K8s 환경에서 미사용 — autoconfig 비활성 (startup 시 connection 실패 방지).
-  # 후속에 실제 ES / S3 셋업 시 이 exclude 제거 + 해당 URL 환경변수로 주입.
+  # Elasticsearch / AWS S3 는 K8s 환경에서 미사용 — autoconfig 비활성.
+  # 단, 사용자 정의 ElasticsearchConfig bean 이 placeholder 를 요구해서 dummy URI 박음 (실제 connection 안 함).
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchDataAutoConfiguration
       - org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchRestClientAutoConfiguration
       - org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration
+  data:
+    elasticsearch:
+      uris: http://localhost:9200    # placeholder 만 채움. 실제 호출 X (autoconfig exclude 상태)
 
 eureka:
   client:
