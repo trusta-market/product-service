@@ -6,6 +6,11 @@ metadata:
     app: product-service
 spec:
   replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
   selector:
     matchLabels:
       app: product-service
@@ -47,7 +52,7 @@ spec:
             # AWS / ES env 는 K8s 에 없음. autoconfig exclude 로 회피 (application-k8s.yml 참조).
           resources:
             requests:
-              cpu: 700m
+              cpu: 500m
               memory: 2Gi
             limits:
               cpu: 1000m
