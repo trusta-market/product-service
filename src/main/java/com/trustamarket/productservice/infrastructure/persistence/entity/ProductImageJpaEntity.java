@@ -2,7 +2,6 @@ package com.trustamarket.productservice.infrastructure.persistence.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -38,17 +37,25 @@ public class ProductImageJpaEntity {
 
     private Instant deletedAt;
 
-    @Builder
-    public ProductImageJpaEntity(UUID id, String imageUrl,
-                                 int sortOrder, boolean isThumbnail, boolean isDeleted, Instant deletedAt) {
-        this.id = id;
-        this.imageUrl = imageUrl;
-        this.sortOrder = sortOrder;
-        this.isThumbnail = isThumbnail;
-        this.isDeleted = isDeleted;
-        this.deletedAt = deletedAt;
+    public static ProductImageJpaEntity create(ProductJpaEntity product, UUID id,
+                                               String imageUrl, int sortOrder,
+                                               boolean isThumbnail, boolean isDeleted,
+                                               Instant deletedAt) {
+        if (product == null) {
+            throw new IllegalArgumentException("ProductImageJpaEntity 생성 시 product는 필수입니다.");
+        }
+        ProductImageJpaEntity entity = new ProductImageJpaEntity();
+        entity.product = product;
+        entity.id = id;
+        entity.imageUrl = imageUrl;
+        entity.sortOrder = sortOrder;
+        entity.isThumbnail = isThumbnail;
+        entity.isDeleted = isDeleted;
+        entity.deletedAt = deletedAt;
+        return entity;
     }
 
+    // package-private — 관계 변경 진입점을 ProductJpaEntity.addImage()로 제한
     void assignProduct(ProductJpaEntity product) {
         this.product = product;
     }
