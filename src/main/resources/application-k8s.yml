@@ -45,6 +45,20 @@ spring:
   kafka:
     bootstrap-servers: kafka.kafka:9092
 
+# AWS S3 — K8s 환경에 미사용. S3Config bean 이 placeholder 요구 → dummy 박음 (실제 호출 X).
+# 후속에 실제 S3 셋업 시 Secret 으로 교체.
+cloud:
+  aws:
+    credentials:
+      access-key: dummy
+      secret-key: dummy
+    region:
+      static: ap-northeast-2
+    stack:
+      auto: false
+    s3:
+      bucket: dummy
+
 eureka:
   client:
     service-url:
