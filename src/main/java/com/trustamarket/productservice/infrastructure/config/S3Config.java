@@ -1,13 +1,15 @@
 package com.trustamarket.productservice.infrastructure.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.StringUtils;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
-import org.springframework.beans.factory.annotation.Value;
+
 
 @Configuration
 public class S3Config {
@@ -23,9 +25,13 @@ public class S3Config {
 
     @Bean
     public S3Client s3Client() {
+        if (!StringUtils.hasText(region)) {
+            throw new IllegalStateException(
+                    "cloud.aws.region.static 설정이 누락되었습니다. S3 리전을 config에 명시해주세요.");
+        }
         return S3Client.builder()
                 .region(Region.of(region))
-                .credentialsProvider(awsCredentialsProvider()) // 분리된 빈 사용
+                .credentialsProvider(awsCredentialsProvider())
                 .build();
     }
 

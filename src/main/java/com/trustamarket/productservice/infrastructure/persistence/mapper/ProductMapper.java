@@ -32,7 +32,6 @@ public class ProductMapper {
                 .grade(product.getGrade())
                 .status(product.getStatus())
                 .inspectionStatus(product.getInspectionStatus())
-                .images(toImageJpaEntities(product.getImages()))
                 .createdAt(product.getCreatedAt())
                 .updatedAt(product.getUpdatedAt());
 
@@ -40,7 +39,13 @@ public class ProductMapper {
             builder.id(product.getId());
         }
 
-        return builder.build();
+        // ProductJpaEntity를 먼저 build한 뒤 팩토리 메서드에 product를 전달
+        // ProductImageJpaEntity.create()가 product를 필수로 받아 NOT NULL 보장
+        ProductJpaEntity jpaEntity = builder.build();
+        toImageJpaEntities(product.getImages(), jpaEntity)
+                .forEach(jpaEntity::addImage);
+
+        return jpaEntity;
     }
 
     // JpaEntity → Domain
@@ -65,29 +70,25 @@ public class ProductMapper {
         );
     }
 
-    private List<ProductImageJpaEntity> toImageJpaEntities(List<ProductImage> images) {
-        if (images == null) return new ArrayList<>(); // null 방어 코드
+    // ProductJpaEntity를 받아 팩토리 메서드로 생성 — product NOT NULL 보장
+    private List<ProductImageJpaEntity> toImageJpaEntities(List<ProductImage> images, ProductJpaEntity product) {
+        if (images == null) return new ArrayList<>();
 
         return images.stream()
-                .map(img -> {
-                    // 1. 빌더를 변수로 생성 (상품과 동일한 방식)
-                    var imgBuilder = ProductImageJpaEntity.builder()
-                            .imageUrl(img.getImageUrl())
-                            .sortOrder(img.getSortOrder())
-                            .isThumbnail(img.isThumbnail());
-
-                    // 2. 이미지 ID가 있을 때만(즉, 수정 시에만) ID를 세팅
-                    if (img.getId() != null) {
-                        imgBuilder.id(img.getId());
-                    }
-
-                    return imgBuilder.build();
-                })
+                .map(img -> ProductImageJpaEntity.create(
+                        product,
+                        img.getId(),        // 신규 시 null, 수정 시 기존 id
+                        img.getImageUrl(),
+                        img.getSortOrder(),
+                        img.isThumbnail(),
+                        img.isDeleted(),
+                        img.getDeletedAt()
+                ))
                 .collect(Collectors.toList());
     }
 
     private List<ProductImage> toImageDomains(List<ProductImageJpaEntity> entities) {
-        if (entities == null) return new ArrayList<>(); // null 방어 코드
+        if (entities == null) return new ArrayList<>();
 
         return entities.stream()
                 .map(e -> ProductImage.restore(
@@ -95,7 +96,7 @@ public class ProductMapper {
                         e.getImageUrl(),
                         e.getSortOrder(),
                         e.isThumbnail(),
-                        e.isDeleted(),   
+                        e.isDeleted(),
                         e.getDeletedAt()
                 ))
                 .collect(Collectors.toList());

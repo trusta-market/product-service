@@ -43,7 +43,6 @@ public class ProductJpaEntity {
     @Column(nullable = false)
     private Long price;
 
-    // inspection-service가 제안한 가격. PRICE_SUGGESTED 상태일 때만 유효.
     @Column
     private Long suggestedPrice;
 
@@ -58,21 +57,20 @@ public class ProductJpaEntity {
     @Column(nullable = false)
     private InspectionStatus inspectionStatus;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @OrderBy("sortOrder ASC") // ProductImageJpaEntity의 sortOrder 필드 기준 정렬
-    @JoinColumn(name = "product_id")
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("sortOrder ASC")
     private List<ProductImageJpaEntity> images = new ArrayList<>();
 
-    @CreatedDate // 자동 생성일 관리
+    @CreatedDate
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
-    @LastModifiedDate // 자동 수정일 관리
+    @LastModifiedDate
     @Column(nullable = false)
     private Instant updatedAt;
 
     @Builder
-    public ProductJpaEntity(UUID id, UUID sellerId, UUID categoryId, UUID inspectorId,String title,
+    public ProductJpaEntity(UUID id, UUID sellerId, UUID categoryId, UUID inspectorId, String title,
                             String description, Long price, Long suggestedPrice, ProductGrade grade,
                             ProductStatus status, InspectionStatus inspectionStatus,
                             List<ProductImageJpaEntity> images,
@@ -88,8 +86,16 @@ public class ProductJpaEntity {
         this.grade = grade;
         this.status = status;
         this.inspectionStatus = inspectionStatus;
-        this.images = images != null ? images : new ArrayList<>();
+        if (images != null) {
+            this.images = new ArrayList<>(images);
+            this.images.forEach(img -> img.assignProduct(this));
+        }
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+    }
+
+    public void addImage(ProductImageJpaEntity image) {
+        image.assignProduct(this);
+        this.images.add(image);
     }
 }
