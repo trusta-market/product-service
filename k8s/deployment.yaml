@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-service
+  labels:
+    app: product-service
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: product-service
+  template:
+    metadata:
+      labels:
+        app: product-service
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: product-service
+          image: asia-northeast3-docker.pkg.dev/trusta-market-id/trusta-registry-services/product-service:PLACEHOLDER
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          ports:
+            - containerPort: 8102
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "k8s"
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: domain-postgres-secrets
+                  key: DB_USERNAME
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: domain-postgres-secrets
+                  key: DB_PASSWORD
+            # AWS / ES env 는 K8s 에 없음. autoconfig exclude 로 회피 (application-k8s.yml 참조).
+          resources:
+            requests:
+              cpu: 500m
+              memory: 2Gi
+            limits:
+              cpu: 1000m
+              memory: 2500Mi
+          # startupProbe — /actuator/health/liveness (application 자체만).
+          # /actuator/health (전체 합산) 는 외부 의존성 (Kafka/ES 등) 한 군데 DOWN 만 돼도 503 → kill.
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8102
+            failureThreshold: 30
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8102
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8102
+            periodSeconds: 5
