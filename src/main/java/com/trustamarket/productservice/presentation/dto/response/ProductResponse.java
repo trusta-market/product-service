@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class ProductResponse {
 
-    private final UUID id;
+    private final UUID productId;
     private final UUID sellerId;
     private final UUID categoryId;
     private final String title;
@@ -39,7 +39,7 @@ public class ProductResponse {
         if (product == null) return null;
 
         return ProductResponse.builder()
-                .id(product.getId())
+                .productId(product.getId())
                 .sellerId(product.getSellerId())
                 .categoryId(product.getCategoryId())
                 .title(product.getTitle())
