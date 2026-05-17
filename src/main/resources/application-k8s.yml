@@ -22,10 +22,12 @@ spring:
     url: jdbc:postgresql://postgres:5432/trusta_market
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
-    # HikariCP pool — default 10 이 thread 800 대비 너무 작아서 thread 가 pool 대기.
-    # postgres max_connections=700 안에서 7 DB service × pool 18 × HPA max 5 = 630 (안전선).
+    # HikariCP pool — 3차 부하 결과로 product 만 pending 332 도달 (다른 service pending 0).
+    # 다른 service 그대로 두고 product 만 극단. DB 한계 안 자리:
+    # 6 × 18 × 5 = 540 → 남은 160 / product 5 pod = pool 32 가 max.
+    # 합 = 540 + 5 × 32 = 700 / 700 정확.
     hikari:
-      maximum-pool-size: 18
+      maximum-pool-size: 32
   jpa:
     hibernate:
       ddl-auto: validate
