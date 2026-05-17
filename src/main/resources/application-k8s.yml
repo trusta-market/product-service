@@ -19,7 +19,9 @@ spring:
       label: develop
       fail-fast: false
   datasource:
-    url: jdbc:postgresql://postgres:5432/trusta_market
+    # DB_HOST env 로 endpoint 주입 (Secret domain-postgres-secrets). default = postgres (in-cluster fallback).
+    # Cloud SQL 마이그 시 Secret 의 DB_HOST 만 변경 → 코드 변경 X.
+    url: jdbc:postgresql://${DB_HOST:postgres}:5432/trusta_market
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     # HikariCP pool — 3차 부하 결과로 product 만 pending 332 도달 (다른 service pending 0).
