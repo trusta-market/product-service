@@ -47,9 +47,8 @@ dependencies {
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 
-	// flyway
-	implementation("org.flywaydb:flyway-core:10.20.1")
-	implementation("org.flywaydb:flyway-database-postgresql:10.20.1")
+	// liquibase
+	implementation 'org.liquibase:liquibase-core'
 
 	// Querydsl 의존성
 	implementation 'com.querydsl:querydsl-jpa:5.1.0:jakarta'
