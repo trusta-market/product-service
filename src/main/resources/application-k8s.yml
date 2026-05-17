@@ -24,12 +24,11 @@ spring:
     url: jdbc:postgresql://${DB_HOST:postgres}:5432/trusta_market
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
-    # HikariCP pool — 3차 부하 결과로 product 만 pending 332 도달 (다른 service pending 0).
-    # 다른 service 그대로 두고 product 만 극단. DB 한계 안 자리:
-    # 6 × 18 × 5 = 540 → 남은 160 / product 5 pod = pool 32 가 max.
-    # 합 = 540 + 5 × 32 = 700 / 700 정확.
+    # HikariCP pool — Cloud SQL max_connections=2500 안에서 진짜 짜내기.
+    # product = 다른 service 의 2배 (50% read 비중). 다른 6 service = 60.
+    # 합 = 6 × 60 × 5 + 5 × 120 = 1800 + 600 = 2400 / 2500 ✓ (여유 100).
     hikari:
-      maximum-pool-size: 32
+      maximum-pool-size: 120
   jpa:
     hibernate:
       ddl-auto: validate
