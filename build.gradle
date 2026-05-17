@@ -50,6 +50,9 @@ dependencies {
 	// liquibase
 	implementation 'org.liquibase:liquibase-core'
 
+	// caffeine — in-JVM cache (ProductCachePort adapter 구현). 나중에 Redis adapter 추가 시 같은 port.
+	implementation 'com.github.ben-manes.caffeine:caffeine'
+
 	// Querydsl 의존성
 	implementation 'com.querydsl:querydsl-jpa:5.1.0:jakarta'
 	annotationProcessor "com.querydsl:querydsl-apt:5.1.0:jakarta"
