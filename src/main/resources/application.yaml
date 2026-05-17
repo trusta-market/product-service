@@ -33,6 +33,7 @@ trusta:
       inspection-completed: inspection.completed
       # order-service → product-service : 주문 확정 → SOLD_OUT 전환
       product-sold-out: order.product.sold-out
+      order-paid: order.paid
   security:
     trust-gateway-headers: true
 

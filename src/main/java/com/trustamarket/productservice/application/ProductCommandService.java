@@ -196,4 +196,16 @@ public class ProductCommandService {
         product.markSoldOutByOrder();
         productRepository.save(product);
     }
+
+    public void reserveByOrder(UUID productId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
+
+        if (product.getStatus() == ProductStatus.RESERVED) {
+            return; // 멱등성 처리
+        }
+        productDomainService.validateStatusTransition(product.getStatus(), ProductStatus.RESERVED);
+        product.reserve();
+        productRepository.save(product);
+    }
 }
