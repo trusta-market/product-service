@@ -27,6 +27,9 @@ public class Product {
     @EqualsAndHashCode.Include
     private UUID id;
 
+    @Version
+    private Long version;
+
     @Column(nullable = false)
     private UUID sellerId;
 
