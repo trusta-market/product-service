@@ -56,16 +56,15 @@ spec:
                   name: domain-postgres-secrets
                   key: DB_HOST
             # AWS / ES env 는 K8s 에 없음. autoconfig exclude 로 회피 (application-k8s.yml 참조).
-          # request 는 실 사용량 기반 (CPU ~25m, memory ~400Mi, burst 여유 포함).
-          # limit memory 2Gi → 2.5Gi — pool 32 connection state + 3차 부하 시 restart 2회 (burst OOM 의심) 방지.
-          # thread 800 stack 800MB + heap (limit*25%=625MB) + pool 32 connection state + 기타 = ~1.8GB → 2.5Gi 안 여유.
+          # 부하 측정 시 일관된 환경 위해 limit 제거 (variable 줄임). burst 시 노드 free 까지 사용 — 터져도 OK.
+          # request 만 유지 (스케줄링 위해).
           resources:
             requests:
               cpu: 100m
               memory: 800Mi
-            limits:
-              cpu: 1500m
-              memory: 2500Mi
+            # limits:
+            #   cpu: 1500m
+            #   memory: 2500Mi
           # startupProbe — /actuator/health/liveness (application 자체만).
           # /actuator/health (전체 합산) 는 외부 의존성 (Kafka/ES 등) 한 군데 DOWN 만 돼도 503 → kill.
           startupProbe:
