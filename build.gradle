@@ -31,7 +31,7 @@ repositories {
 }
 
 dependencies {
-	implementation 'com.trustamarket:common:0.3.0-SNAPSHOT'
+	implementation 'com.trustamarket:common:0.4.0-SNAPSHOT'
 
 	// spring
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'

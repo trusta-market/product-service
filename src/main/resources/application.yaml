@@ -35,6 +35,8 @@ trusta:
       product-sold-out: order.product.sold-out
   security:
     trust-gateway-headers: true
+  swagger:
+    expose-public: ${TRUSTA_SWAGGER_EXPOSE_PUBLIC:true}
 
 # 다른 service 와 동일 패턴 — k8s liveness/readiness probe + prometheus scrape.
 management:
