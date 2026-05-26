@@ -1,5 +1,6 @@
 package com.trustamarket.productservice.presentation.controller;
 
+import com.trustamarket.common.response.CommonResponse;
 import com.trustamarket.common.util.SecurityUtil;
 import com.trustamarket.productservice.application.ProductCommandService;
 import com.trustamarket.productservice.application.ProductQueryService;
@@ -31,13 +32,13 @@ public class ProductController {
     private final ProductQueryService productQueryService;
 
     @PostMapping("/{productId}/inspection")
-    @ResponseStatus(HttpStatus.OK)
-    public void requestInspection(
+    public CommonResponse<Void> requestInspection(
             @PathVariable UUID productId,
             @Valid @RequestBody InspectionRequestDto request
     ) {
         UUID sellerId = SecurityUtil.getCurrentUserIdOrThrow();
         productCommandService.requestInspection(productId, sellerId, request.getCenterId());
+        return CommonResponse.of(HttpStatus.OK.value(), null);
     }
 
     @PostMapping
@@ -106,10 +107,10 @@ public class ProductController {
     }
 
     @DeleteMapping("/{productId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable UUID productId) {
+    public CommonResponse<Void> delete(@PathVariable UUID productId) {
         UUID sellerId = SecurityUtil.getCurrentUserIdOrThrow();
         productCommandService.deleteProduct(productId, sellerId);
+        return CommonResponse.of(HttpStatus.OK.value(), null);
     }
 
     @PatchMapping("/{productId}/status")

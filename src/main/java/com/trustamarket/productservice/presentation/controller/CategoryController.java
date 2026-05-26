@@ -1,5 +1,6 @@
 package com.trustamarket.productservice.presentation.controller;
 
+import com.trustamarket.common.response.CommonResponse;
 import com.trustamarket.productservice.application.CategoryService;
 import com.trustamarket.productservice.domain.category.Category;
 import com.trustamarket.productservice.domain.category.InspectionPolicy;
@@ -72,8 +73,8 @@ public class CategoryController {
 
     // 카테고리 삭제 (관리자용)
     @DeleteMapping("/{categoryId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable UUID categoryId) {
+    public CommonResponse<Void> delete(@PathVariable UUID categoryId) {
         categoryService.delete(categoryId);
+        return CommonResponse.of(HttpStatus.OK.value(), null);
     }
 }
