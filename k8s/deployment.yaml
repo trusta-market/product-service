@@ -46,7 +46,9 @@ spec:
             - containerPort: 8102
           env:
             - name: SPRING_PROFILES_ACTIVE
-              value: "k8s"
+              value: "dev"
+            - name: SPRING_CONFIG_IMPORT
+              value: "configserver:http://config-server"
             - name: DB_USERNAME
               valueFrom:
                 secretKeyRef:
@@ -57,13 +59,13 @@ spec:
                 secretKeyRef:
                   name: domain-postgres-secrets
                   key: DB_PASSWORD
-            # DB_HOST — Cloud SQL Private IP (Secret 에서 주입). application-k8s.yml 의 ${DB_HOST:postgres} 와 대응.
+            # DB_HOST — Cloud SQL Private IP (Secret 에서 주입). application-k8s.yaml 의 ${DB_HOST:postgres} 와 대응.
             - name: DB_HOST
               valueFrom:
                 secretKeyRef:
                   name: domain-postgres-secrets
                   key: DB_HOST
-            # AWS / ES env 는 K8s 에 없음. autoconfig exclude 로 회피 (application-k8s.yml 참조).
+            # AWS / ES env 는 K8s 에 없음. autoconfig exclude 로 회피 (application-k8s.yaml 참조).
           # 부하 측정 시 일관된 환경 위해 limit 제거 (variable 줄임). burst 시 노드 free 까지 사용 — 터져도 OK.
           # request 만 유지 (스케줄링 위해).
           resources:
