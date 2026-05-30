@@ -1,5 +1,6 @@
 package com.trustamarket.productservice.infrastructure.kafka;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trustamarket.productservice.application.port.ProductEventPublishPort;
 import com.trustamarket.productservice.domain.product.Product;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +15,9 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ProductEventPublisher implements ProductEventPublishPort {
 
-    private final KafkaTemplate<String, Object> kafkaTemplate;
+    // 타 서비스 producer와 동일하게 payload를 JSON String으로 직렬화해 발행(StringSerializer).
+    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final ObjectMapper objectMapper;
 
     // 다른 서비스가 구독할 토픽명
     private static final String PRODUCT_CREATED_TOPIC = "product.created";
@@ -41,7 +44,7 @@ public class ProductEventPublisher implements ProductEventPublishPort {
             kafkaTemplate.send(
                     PRODUCT_CREATED_TOPIC,
                     product.getId().toString(),
-                    event
+                    objectMapper.writeValueAsString(event)
             );
             log.info("ProductCreatedEvent 발행 완료 - productId: {}", product.getId());
         } catch (Exception e) {
@@ -56,7 +59,7 @@ public class ProductEventPublisher implements ProductEventPublishPort {
             kafkaTemplate.send(
                     PRODUCT_DELETED_TOPIC,
                     productId.toString(),
-                    productId.toString()
+                    objectMapper.writeValueAsString(productId.toString())
             );
             log.info("ProductDeletedEvent 발행 완료 - productId: {}", productId);
         } catch (Exception e) {
@@ -71,7 +74,7 @@ public class ProductEventPublisher implements ProductEventPublishPort {
             InspectionRequestedEvent event = new InspectionRequestedEvent(
                     productId, sellerId, centerId, originalPriceAmount, currency
             );
-            kafkaTemplate.send(INSPECTION_REQUESTED_TOPIC, productId.toString(), event);
+            kafkaTemplate.send(INSPECTION_REQUESTED_TOPIC, productId.toString(), objectMapper.writeValueAsString(event));
             log.info("InspectionRequestedEvent 발행 완료 - productId: {}", productId);
         } catch (Exception e) {
             log.error("InspectionRequestedEvent 발행 실패 - productId: {}", productId, e);
@@ -87,7 +90,7 @@ public class ProductEventPublisher implements ProductEventPublishPort {
                     product.getSellerId(),
                     product.getPrice()  // 수락 후 확정된 최종가격
             );
-            kafkaTemplate.send(INSPECTION_PRICE_ACCEPTED_TOPIC, product.getId().toString(), event);
+            kafkaTemplate.send(INSPECTION_PRICE_ACCEPTED_TOPIC, product.getId().toString(), objectMapper.writeValueAsString(event));
             log.info("InspectionPriceAcceptedEvent 발행 완료 - productId: {}", product.getId());
         } catch (Exception e) {
             log.error("InspectionPriceAcceptedEvent 발행 실패 - productId: {}", product.getId(), e);
@@ -103,7 +106,7 @@ public class ProductEventPublisher implements ProductEventPublishPort {
                     product.getSellerId(),
                     reason
             );
-            kafkaTemplate.send(INSPECTION_PRICE_REJECTED_TOPIC, product.getId().toString(), event);
+            kafkaTemplate.send(INSPECTION_PRICE_REJECTED_TOPIC, product.getId().toString(), objectMapper.writeValueAsString(event));
             log.info("InspectionPriceRejectedEvent 발행 완료 - productId: {}", product.getId());
         } catch (Exception e) {
             log.error("InspectionPriceRejectedEvent 발행 실패 - productId: {}", product.getId(), e);
