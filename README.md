@@ -16,7 +16,6 @@
 | Framework | Spring Boot 3.5 |
 | ORM | Spring Data JPA (Hibernate 6), QueryDSL 5.1 |
 | Database | PostgreSQL 17, Flyway (마이그레이션) |
-| Search | Elasticsearch 8 |
 | Messaging | Apache Kafka |
 | Storage | AWS S3 (ap-northeast-2) |
 | Security | Spring Security (Gateway 헤더 기반 인증) |
@@ -34,7 +33,7 @@
 presentation      → Controller, DTO (Request/Response)
 application       → Service, UseCase, Event Listener, Port Interface
 domain            → Product, ProductImage, Category, 도메인 정책
-infrastructure    → JPA, Kafka, S3, Elasticsearch 구현체
+infrastructure    → JPA, Kafka, S3 구현체
 ```
 
 ---
@@ -45,7 +44,6 @@ infrastructure    → JPA, Kafka, S3, Elasticsearch 구현체
 - **이미지 관리**: S3 업로드, 썸네일 지정, 순서 변경, Soft Delete
 - **카테고리 검수 정책**: ALWAYS / PRICE_BASED / NEVER 정책으로 검수 필요 여부 자동 판단
 - **검수 연동**: inspection-service와 Kafka 이벤트로 검수 요청/결과 수신
-- **상품 검색**: Elasticsearch 기반 상품 검색
 - **상품 상태 관리**: ON_SALE → RESERVED → SOLD_OUT 등 상태 전이
 
 ---
@@ -165,10 +163,9 @@ Gateway를 통해 주입되는 사용자 인증 헤더입니다.
 ```
 1. PostgreSQL
 2. Kafka (+ Zookeeper)
-3. Elasticsearch
-4. Eureka Server
-5. Config Server
-6. product-service
+3. Eureka Server
+4. Config Server
+5. product-service
 ```
 
 ### 환경변수

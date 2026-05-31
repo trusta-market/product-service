@@ -103,7 +103,6 @@ public class ProductCommandService {
 
         product.update(title, description, price, categoryId, imageUrls, needsInspection);
         Product saved = productRepository.save(product);
-        eventPublisher.publishEvent(new ProductUpdatedEvent(saved));
         return saved;
     }
 
@@ -148,7 +147,6 @@ public class ProductCommandService {
 
         product.receiveInspectionResult(grade, suggestedPrice, inspectorId);
         Product saved = productRepository.save(product);
-        eventPublisher.publishEvent(new InspectionResultReceivedEvent(saved)); // ES 재인덱싱
         return saved;
     }
 
@@ -163,7 +161,6 @@ public class ProductCommandService {
 
         product.acceptInspectionResult();
         Product saved = productRepository.save(product);
-        eventPublisher.publishEvent(new ProductInspectedEvent(saved));       // ES 인덱싱
         eventPublisher.publishEvent(new InspectionAcceptedEvent(saved));     // Kafka 발행
         return saved;
     }

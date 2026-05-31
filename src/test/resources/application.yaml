@@ -4,7 +4,7 @@ spring:
   main:
     allow-bean-definition-overriding: true
 
-  # 테스트는 외부 config-server / elasticsearch / kafka / s3 자격증명 의존 X
+  # 테스트는 외부 config-server / kafka / s3 자격증명 의존 X
   config:
     import: ""
   cloud:
@@ -28,10 +28,6 @@ spring:
       hibernate:
         default_schema: ${SCHEMA:p_product}
         dialect: org.hibernate.dialect.PostgreSQLDialect
-
-  data:
-    elasticsearch:
-      uris: http://localhost:9200
 
   kafka:
     bootstrap-servers: localhost:9092
