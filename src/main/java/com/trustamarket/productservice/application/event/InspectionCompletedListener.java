@@ -21,8 +21,7 @@ public class InspectionCompletedListener {
 
     @KafkaListener(
             topics = "${trusta.messaging.topic.inspection-completed}",
-            groupId = "product-inspection-completed-group",
-            containerFactory = "inspectionCompletedListenerContainerFactory"
+            groupId = "product-inspection-completed-group"
     )
     public void consume(String payload, Acknowledgment ack) {
         InspectionCompletedMessage message;
