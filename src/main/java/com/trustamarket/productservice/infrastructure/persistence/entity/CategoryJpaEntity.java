@@ -40,6 +40,7 @@ public class CategoryJpaEntity {
     @Column(name = "inspection_policy", length = 20)
     private InspectionPolicy inspectionPolicy;
 
+    // 영속 상태(soft delete)는 JpaEntity에서만 관리
     @Column(nullable = false)
     private boolean deleted = false;
 
@@ -48,14 +49,16 @@ public class CategoryJpaEntity {
 
     @Builder
     public CategoryJpaEntity(UUID categoryId, String name, CategoryJpaEntity parent,
-                             int depth, int displayOrder, Integer inspectionThreshold, InspectionPolicy inspectionPolicy, boolean deleted, Instant deletedAt) {
+                             int depth, int displayOrder, Integer inspectionThreshold,
+                             InspectionPolicy inspectionPolicy,
+                             boolean deleted, Instant deletedAt) {
         this.categoryId = categoryId;
         this.name = name;
         this.parent = parent;
         this.depth = depth;
         this.displayOrder = displayOrder;
         this.inspectionThreshold = inspectionThreshold;
-        this.inspectionPolicy    = inspectionPolicy;
+        this.inspectionPolicy = inspectionPolicy;
         this.deleted = deleted;
         this.deletedAt = deletedAt;
     }

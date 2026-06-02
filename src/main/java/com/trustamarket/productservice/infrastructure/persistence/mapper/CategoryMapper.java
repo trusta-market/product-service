@@ -12,17 +12,24 @@ public class CategoryMapper {
     public Category toDomain(CategoryJpaEntity entity) {
         if (entity == null) return null;
         return Category.builder()
-                .categoryId(entity.getCategoryId()).name(entity.getName())
+                .categoryId(entity.getCategoryId())
+                .name(entity.getName())
                 .parent(toDomainSummary(entity.getParent()))
-                .depth(entity.getDepth()).displayOrder(entity.getDisplayOrder())
+                .depth(entity.getDepth())
+                .displayOrder(entity.getDisplayOrder())
                 .inspectionThreshold(entity.getInspectionThreshold())
                 .inspectionPolicy(entity.getInspectionPolicy())
+                .deleted(entity.isDeleted())         // JpaEntity → Domain 전달
+                .deletedAt(entity.getDeletedAt())    // JpaEntity → Domain 전달
                 .build();
     }
 
     private Category toDomainSummary(CategoryJpaEntity entity) {
         if (entity == null) return null;
-        return Category.builder().categoryId(entity.getCategoryId()).name(entity.getName()).build();
+        return Category.builder()
+                .categoryId(entity.getCategoryId())
+                .name(entity.getName())
+                .build();
     }
 
     public CategoryJpaEntity toJpaEntity(Category category) {
@@ -34,11 +41,15 @@ public class CategoryMapper {
             parentEntity = CategoryJpaEntity.builder().categoryId(parentId).build();
         }
         return CategoryJpaEntity.builder()
-                .categoryId(category.getCategoryId()).name(category.getName()).parent(parentEntity)
-                .depth(category.getDepth()).displayOrder(category.getDisplayOrder())
+                .categoryId(category.getCategoryId())
+                .name(category.getName())
+                .parent(parentEntity)
+                .depth(category.getDepth())
+                .displayOrder(category.getDisplayOrder())
                 .inspectionThreshold(category.getInspectionThreshold())
                 .inspectionPolicy(category.getInspectionPolicy())
-                .deleted(category.isDeleted()).deletedAt(category.getDeletedAt())
+                .deleted(category.isDeleted())       // Domain → JpaEntity 전달
+                .deletedAt(category.getDeletedAt())  // Domain → JpaEntity 전달
                 .build();
     }
 }
