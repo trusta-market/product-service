@@ -26,6 +26,13 @@ public class ProductImageAppService {
 
     private static final String IMAGE_DIRECTORY = "products";
 
+    private Product findActiveProduct(UUID productId) {
+        Product product = productRepository.findByIdWithImages(productId)
+                .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
+        if (product.isDeleted()) throw new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND);
+        return product;
+    }
+
     // 이미지 업로드 후 상품에 추가
     @Transactional
     public Product addImage(UUID productId, UUID sellerId, MultipartFile file) {

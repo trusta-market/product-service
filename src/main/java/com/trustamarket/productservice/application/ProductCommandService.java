@@ -114,7 +114,8 @@ public class ProductCommandService {
         if (!product.isOwnedBy(sellerId)) {
             throw new ProductAccessDeniedException(ProductErrorCode.PRODUCT_ACCESS_DENIED);        }
 
-        productRepository.deleteById(productId);
+        product.softDelete();
+        productRepository.save(product);
         eventPublisher.publishEvent(new ProductDeletedEvent(productId));
     }
 
