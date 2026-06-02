@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -32,6 +33,12 @@ public class Category {
     @Column(name = "inspection_policy", length = 20)
     private InspectionPolicy inspectionPolicy;
 
+    @Column(nullable = false)
+    private boolean deleted = false;
+
+    @Column
+    private Instant deletedAt;
+
     @Builder
     public Category(UUID id, String name, Category parent,
                     int depth, int displayOrder, Integer inspectionThreshold, InspectionPolicy inspectionPolicy) {
@@ -42,6 +49,12 @@ public class Category {
         this.displayOrder = displayOrder;
         this.inspectionThreshold = inspectionThreshold;
         this.inspectionPolicy    = inspectionPolicy;
+        this.deleted = false;
+    }
+
+    public void softDelete() {
+        this.deleted = true;
+        this.deletedAt = Instant.now();
     }
 
     public InspectionPolicy getEffectivePolicy() {

@@ -14,5 +14,4 @@ public interface ProductRepository {
     Page<Product> findByCategoryId(UUID categoryId, Pageable pageable);
     List<Product> findTop10ByOrderByCreatedAtDesc();
     Product save(Product product);
-    void deleteById(UUID id);
 }

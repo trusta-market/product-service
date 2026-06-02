@@ -64,6 +64,12 @@ public class Product {
     @JoinColumn(name = "product_id")
     private List<ProductImage> images;
 
+    @Column(nullable = false)
+    private boolean deleted = false;
+
+    @Column
+    private Instant deletedAt;
+
     private Instant createdAt;
     private Instant updatedAt;
 
@@ -83,6 +89,7 @@ public class Product {
                 ? InspectionStatus.PENDING
                 : InspectionStatus.NONE;
         this.images = new ArrayList<>();
+        this.deleted = false;
         this.createdAt = Instant.now();
         this.updatedAt = Instant.now();
     }
@@ -108,7 +115,7 @@ public class Product {
     public static Product restore(UUID id, UUID sellerId, UUID categoryId, UUID inspectorId, String title,
                                   String description, Long price, Long suggestedPrice, ProductGrade grade,
                                   ProductStatus status, InspectionStatus inspectionStatus, List<ProductImage> images,
-                                  Instant createdAt, Instant updatedAt) {
+                                  Instant createdAt, Instant updatedAt, boolean deleted, Instant deletedAt) {
         Product product = new Product();
         product.id = id;
         product.sellerId = sellerId;
@@ -124,9 +131,16 @@ public class Product {
         product.images = (images != null) ? new ArrayList<>(images) : new ArrayList<>();
         product.createdAt = createdAt;
         product.updatedAt = updatedAt;
+        product.deleted = deleted;
+        product.deletedAt = deletedAt;
         return product;
     }
 
+    public void softDelete() {
+        this.deleted = true;
+        this.deletedAt = Instant.now();
+        onUpdate();
+    }
 
     // 제목, 가격 같은 상세내용 수정
     public void update(String title, String description, Long price,

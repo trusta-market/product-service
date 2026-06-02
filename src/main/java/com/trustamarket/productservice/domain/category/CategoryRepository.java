@@ -10,5 +10,4 @@ public interface CategoryRepository {
     List<Category> findByParentIsNull();
     List<Category> findByParentId(UUID parentId);
     Category save(Category category);
-    void deleteById(UUID id);
 }
