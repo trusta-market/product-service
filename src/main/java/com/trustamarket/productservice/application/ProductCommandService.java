@@ -34,32 +34,34 @@ public class ProductCommandService {
     private final ApplicationEventPublisher eventPublisher;
     private final ProductEventPublishPort productEventPublishPort;
 
+     // 명령용 활성 상품 조회 — 소프트 삭제된 상품은 404 처리, 판매자가 직접 호출하는 모든 명령 메서드에서 사용
+    private Product findActiveProduct(UUID productId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
+        if (product.isDeleted()) {
+            throw new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND);
+        }
+        return product;
+    }
+
+     // 시스템 내부용 조회 — Kafka 이벤트 처리 등 deleted 무관하게 조회
+    private Product findProductInternal(UUID productId) {
+        return productRepository.findById(productId)
+                .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
+    }
+
     // 상품 등록
-    // 카테고리별 임계치(`Category.getEffectiveThreshold()`)와 가격을 비교해 검수 필요 여부 결정.
-    // - 가격 ≥ 임계치 (고가): PENDING_INSPECTION + InspectionStatus.PENDING
-    // - 가격 < 임계치 (저가): ON_SALE 즉시 + InspectionStatus.NONE
     public Product create(UUID sellerId, String title, String description, Long price, UUID categoryId, List<String> imageUrls) {
-        // 1. 카테고리 조회 (없으면 404)
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new CategoryNotFoundException(ProductErrorCode.CATEGORY_NOT_FOUND));
 
-        // 2. 임계치 비교로 검수 필요 여부 동적 결정 (이전엔 true 하드코딩이었음)
-        // price 는 Integer 라 nullable — auto-unbox NPE 회피용 명시 가드
         if (price == null) {
             throw new IllegalArgumentException("price must not be null");
         }
         boolean requiresInspection = productDomainService.requiresInspection(category, price);
-        
-        // grade: 초기엔 미정. 검수 통과 시 검수자가 확정.
+
         Product product = Product.create(
-                sellerId,
-                categoryId,
-                title,
-                description,
-                price,
-                null,
-                requiresInspection,
-                imageUrls
+                sellerId, categoryId, title, description, price, null, requiresInspection, imageUrls
         );
 
         Product savedProduct = productRepository.save(product);
@@ -67,10 +69,9 @@ public class ProductCommandService {
         return savedProduct;
     }
 
-    // 검수 신청 — 판매자가 센터 선택 후 호출. inspection.requested 발행
+    // 검수 신청 — 삭제된 상품 차단
     public void requestInspection(UUID productId, UUID sellerId, UUID centerId) {
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
+        Product product = findActiveProduct(productId);  // findById → findActiveProduct
         if (!product.isOwnedBy(sellerId)) {
             throw new ProductAccessDeniedException(ProductErrorCode.PRODUCT_ACCESS_DENIED);
         }
@@ -84,109 +85,82 @@ public class ProductCommandService {
         );
     }
 
-    // 상품 수정
+    // 상품 수정 — 삭제된 상품 차단
     public Product update(UUID productId, UUID sellerId, String title,
                           String description, Long price, UUID categoryId, List<String> imageUrls) {
-
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
-
+        Product product = findActiveProduct(productId);  // findById → findActiveProduct
         if (!product.isOwnedBy(sellerId)) {
             throw new ProductAccessDeniedException(ProductErrorCode.PRODUCT_ACCESS_DENIED);
         }
 
-        // 변경된 카테고리·가격 기준으로 검수 필요 여부 재판정
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new CategoryNotFoundException(ProductErrorCode.CATEGORY_NOT_FOUND));
 
         boolean needsInspection = productDomainService.requiresInspection(category, price);
-
         product.update(title, description, price, categoryId, imageUrls, needsInspection);
-        Product saved = productRepository.save(product);
-        return saved;
+        return productRepository.save(product);
     }
 
-    // 상품 삭제
+    // 상품 삭제 — 이미 삭제된 상품 재삭제 차단
     public void deleteProduct(UUID productId, UUID sellerId) {
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
-
+        Product product = findActiveProduct(productId);  // findById → findActiveProduct
         if (!product.isOwnedBy(sellerId)) {
-            throw new ProductAccessDeniedException(ProductErrorCode.PRODUCT_ACCESS_DENIED);        }
-
+            throw new ProductAccessDeniedException(ProductErrorCode.PRODUCT_ACCESS_DENIED);
+        }
         product.softDelete();
         productRepository.save(product);
         eventPublisher.publishEvent(new ProductDeletedEvent(productId));
     }
 
-    // 상품 상태 변경
+    // 상품 상태 변경 — 삭제된 상품 차단
     public Product changeStatus(UUID productId, ProductStatus newStatus, UUID sellerId) {
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
-
+        Product product = findActiveProduct(productId);  // findById → findActiveProduct
         if (!product.isOwnedBy(sellerId)) {
             throw new ProductAccessDeniedException(ProductErrorCode.PRODUCT_ACCESS_DENIED);
         }
-
-        // 전이 가능 여부 검증
         if (!newStatus.canTransitionFrom(product.getStatus())) {
             throw new InvalidStatusTransitionException(ProductErrorCode.INVALID_STATUS_TRANSITION);
         }
-
-        // 전이 실행 — switch 분기 제거
         newStatus.execute(product);
-
         return productRepository.save(product);
     }
 
-
-// 등급 + 제안가격을 저장하고 PRICE_SUGGESTED 상태로 전환. 판매자 결정 대기.
+    // 검수 결과 수신 — 삭제된 상품 차단
     public Product receiveInspectionResult(UUID productId, ProductGrade grade,
                                            Long suggestedPrice, UUID inspectorId) {
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
-
+        Product product = findActiveProduct(productId);  // findById → findActiveProduct
         product.receiveInspectionResult(grade, suggestedPrice, inspectorId);
-        Product saved = productRepository.save(product);
-        return saved;
+        return productRepository.save(product);
     }
 
-    // 판매자 수락 → price = suggestedPrice, ON_SALE (상품 등록 완료)
+    // 판매자 수락 — 삭제된 상품 차단
     public Product acceptInspectionResult(UUID productId, UUID sellerId) {
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
-
+        Product product = findActiveProduct(productId);  // findById → findActiveProduct
         if (!product.isOwnedBy(sellerId)) {
             throw new ProductAccessDeniedException(ProductErrorCode.PRODUCT_ACCESS_DENIED);
         }
-
         product.acceptInspectionResult();
         Product saved = productRepository.save(product);
-        eventPublisher.publishEvent(new InspectionAcceptedEvent(saved));     // Kafka 발행
+        eventPublisher.publishEvent(new InspectionAcceptedEvent(saved));
         return saved;
     }
 
-    // 판매자 거절 → INSPECTION_REJECTED
+    // 판매자 거절 — 삭제된 상품 차단
     public Product rejectInspectionResult(UUID productId, UUID sellerId, String reason) {
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
-
+        Product product = findActiveProduct(productId);  // findById → findActiveProduct
         if (!product.isOwnedBy(sellerId)) {
             throw new ProductAccessDeniedException(ProductErrorCode.PRODUCT_ACCESS_DENIED);
         }
-
         product.rejectInspectionResult();
         Product saved = productRepository.save(product);
-        eventPublisher.publishEvent(new InspectionRejectedEvent(saved, reason)); // Kafka 발행
+        eventPublisher.publishEvent(new InspectionRejectedEvent(saved, reason));
         return saved;
     }
 
-    // 주문 확정 이벤트 (Kafka order.product.sold-out) 수신 시 호출. 시스템 호출이라 sellerId 검증 X.
-    // 멱등성: 이미 SOLD_OUT 인 상품은 no-op (재배달 대비).
+    // 주문 확정 이벤트 수신 — Kafka 내부 처리이므로 deleted 무관 조회 유지
+    // 멱등성: 이미 SOLD_OUT인 상품은 no-op
     public void markSoldOutByOrder(UUID productId) {
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
-
+        Product product = findProductInternal(productId);  // 시스템 내부용 — deleted 무관
         if (product.getStatus() == ProductStatus.SOLD_OUT) {
             return;
         }
