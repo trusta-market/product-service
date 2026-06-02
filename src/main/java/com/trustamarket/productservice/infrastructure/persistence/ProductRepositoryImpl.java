@@ -23,15 +23,15 @@ public class ProductRepositoryImpl implements ProductRepository {
     private final ProductMapper productMapper;
 
     @Override
-    public Optional<Product> findById(UUID id) {
+    public Optional<Product> findById(UUID productId) {
         // 내부 시스템 조회 — deleted 무관 (이벤트 처리 등)
-        return productJpaRepository.findById(id).map(productMapper::toDomain);
+        return productJpaRepository.findById(productId).map(productMapper::toDomain);
     }
 
     @Override
-    public Optional<Product> findByIdWithImages(UUID id) {
+    public Optional<Product> findByIdWithImages(UUID productId) {
         // 외부 노출용 — 소프트 삭제 제외
-        return productJpaRepository.findByIdAndDeletedFalse(id).map(productMapper::toDomain);
+        return productJpaRepository.findByIdAndDeletedFalse(productId).map(productMapper::toDomain);
     }
 
     @Override

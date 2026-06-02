@@ -18,7 +18,7 @@ public class CategoryJpaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
+    private UUID categoryId;
 
     @Column(nullable = false)
     private String name;
@@ -47,9 +47,9 @@ public class CategoryJpaEntity {
     private Instant deletedAt;
 
     @Builder
-    public CategoryJpaEntity(UUID id, String name, CategoryJpaEntity parent,
+    public CategoryJpaEntity(UUID categoryId, String name, CategoryJpaEntity parent,
                              int depth, int displayOrder, Integer inspectionThreshold, InspectionPolicy inspectionPolicy, boolean deleted, Instant deletedAt) {
-        this.id = id;
+        this.categoryId = categoryId;
         this.name = name;
         this.parent = parent;
         this.depth = depth;

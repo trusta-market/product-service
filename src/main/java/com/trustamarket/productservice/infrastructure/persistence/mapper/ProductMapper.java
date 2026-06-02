@@ -34,7 +34,7 @@ public class ProductMapper {
                 .createdAt(product.getCreatedAt())
                 .updatedAt(product.getUpdatedAt());
 
-        if (product.getId() != null) builder.id(product.getId());
+        if (product.getProductId() != null) builder.productId(product.getProductId());
 
         ProductJpaEntity jpaEntity = builder.build();
         toImageJpaEntities(product.getImages(), jpaEntity).forEach(jpaEntity::addImage);
@@ -44,7 +44,7 @@ public class ProductMapper {
     public Product toDomain(ProductJpaEntity entity) {
         if (entity == null) return null;
         return Product.restore(
-                entity.getId(), entity.getSellerId(), entity.getCategoryId(), entity.getInspectorId(),
+                entity.getProductId(), entity.getSellerId(), entity.getCategoryId(), entity.getInspectorId(),
                 entity.getTitle(), entity.getDescription(), entity.getPrice(), entity.getSuggestedPrice(),
                 entity.getGrade(), entity.getStatus(), entity.getInspectionStatus(),
                 toImageDomains(entity.getImages()),
@@ -56,7 +56,7 @@ public class ProductMapper {
     private List<ProductImageJpaEntity> toImageJpaEntities(List<ProductImage> images, ProductJpaEntity product) {
         if (images == null) return new ArrayList<>();
         return images.stream()
-                .map(img -> ProductImageJpaEntity.create(product, img.getId(), img.getImageUrl(),
+                .map(img -> ProductImageJpaEntity.create(product, img.getImageId(), img.getImageUrl(),
                         img.getSortOrder(), img.isThumbnail(), img.isDeleted(), img.getDeletedAt()))
                 .collect(Collectors.toList());
     }
@@ -64,7 +64,7 @@ public class ProductMapper {
     private List<ProductImage> toImageDomains(List<ProductImageJpaEntity> entities) {
         if (entities == null) return new ArrayList<>();
         return entities.stream()
-                .map(e -> ProductImage.restore(e.getId(), e.getImageUrl(), e.getSortOrder(),
+                .map(e -> ProductImage.restore(e.getImageId(), e.getImageUrl(), e.getSortOrder(),
                         e.isThumbnail(), e.isDeleted(), e.getDeletedAt()))
                 .collect(Collectors.toList());
     }

@@ -16,7 +16,7 @@ public class ProductImageJpaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
+    private UUID imageId;
 
     // 양방향 관계 — product_id FK를 이 쪽에서 직접 관리
     @ManyToOne(fetch = FetchType.LAZY)
@@ -37,7 +37,7 @@ public class ProductImageJpaEntity {
 
     private Instant deletedAt;
 
-    public static ProductImageJpaEntity create(ProductJpaEntity product, UUID id,
+    public static ProductImageJpaEntity create(ProductJpaEntity product, UUID imageId,
                                                String imageUrl, int sortOrder,
                                                boolean isThumbnail, boolean isDeleted,
                                                Instant deletedAt) {
@@ -46,7 +46,7 @@ public class ProductImageJpaEntity {
         }
         ProductImageJpaEntity entity = new ProductImageJpaEntity();
         entity.product = product;
-        entity.id = id;
+        entity.imageId = imageId;
         entity.imageUrl = imageUrl;
         entity.sortOrder = sortOrder;
         entity.isThumbnail = isThumbnail;

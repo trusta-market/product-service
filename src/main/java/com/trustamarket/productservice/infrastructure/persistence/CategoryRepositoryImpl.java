@@ -20,8 +20,8 @@ public class CategoryRepositoryImpl implements CategoryRepository {
     private final CategoryMapper categoryMapper;
 
     @Override
-    public Optional<Category> findById(UUID id) {
-        return categoryJpaRepository.findByIdWithParent(id).map(categoryMapper::toDomain);
+    public Optional<Category> findById(UUID categoryId) {
+        return categoryJpaRepository.findByIdWithParent(categoryId).map(categoryMapper::toDomain);
     }
 
     @Override

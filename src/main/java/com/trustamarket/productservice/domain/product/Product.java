@@ -25,7 +25,7 @@ public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @EqualsAndHashCode.Include
-    private UUID id;
+    private UUID productId;
 
     @Column(nullable = false)
     private UUID sellerId;
@@ -112,12 +112,12 @@ public class Product {
     }
 
     // db에 저장디어있던 id나 등록시간 같은걸 다시 살려낸다
-    public static Product restore(UUID id, UUID sellerId, UUID categoryId, UUID inspectorId, String title,
+    public static Product restore(UUID productId, UUID sellerId, UUID categoryId, UUID inspectorId, String title,
                                   String description, Long price, Long suggestedPrice, ProductGrade grade,
                                   ProductStatus status, InspectionStatus inspectionStatus, List<ProductImage> images,
                                   Instant createdAt, Instant updatedAt, boolean deleted, Instant deletedAt) {
         Product product = new Product();
-        product.id = id;
+        product.productId = productId;
         product.sellerId = sellerId;
         product.categoryId = categoryId;
         product.inspectorId = inspectorId;
@@ -295,7 +295,7 @@ public class Product {
         }
 
         // 이미지 중복확인 추가
-        if (image.getId() != null && this.images.stream().anyMatch(img -> image.getId().equals(img.getId()))) {
+        if (image.getImageId() != null && this.images.stream().anyMatch(img -> image.getImageId().equals(img.getImageId()))) {
             throw new IllegalArgumentException("이미 등록된 이미지입니다.");
         }
 
@@ -314,7 +314,7 @@ public class Product {
         }
         // 1. 리스트에서 이미지를 찾아 삭제 상태로 변경
         ProductImage targetImage = this.images.stream()
-                .filter(img -> Objects.equals(img.getId(), imageId) && !img.isDeleted())
+                .filter(img -> Objects.equals(img.getImageId(), imageId) && !img.isDeleted())
                 .findFirst()
                 .orElseThrow(() -> new ImageNotFoundException(ProductErrorCode.IMAGE_NOT_FOUND));
 
@@ -335,7 +335,7 @@ public class Product {
             UUID imageId = imageIdsSortedOrder.get(i);
             int order = i;
             this.images.stream()
-                    .filter(img -> Objects.equals(img.getId(), imageId))
+                    .filter(img -> Objects.equals(img.getImageId(), imageId))
                     .findFirst()
                     .ifPresent(img -> img.changeSortOrder(order));
         }
@@ -371,7 +371,7 @@ public class Product {
     public void changeThumbnail(UUID newThumbnailImageId) {
         // 삭제되지 않은 이미지 중에서 새로운 대표이미지 탐색
         ProductImage newThumbnail = images.stream()
-                .filter(img -> Objects.equals(img.getId(), newThumbnailImageId) && !img.isDeleted())
+                .filter(img -> Objects.equals(img.getImageId(), newThumbnailImageId) && !img.isDeleted())
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("해당 ID를 가진 이미지가 상품에 존재하지 않습니다."));
 

@@ -23,7 +23,7 @@ public class ProductJpaEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @EqualsAndHashCode.Include
-    private UUID id;
+    private UUID productId;
 
     @Column(nullable = false)
     private UUID sellerId;
@@ -76,12 +76,12 @@ public class ProductJpaEntity {
     private Instant updatedAt;
 
     @Builder
-    public ProductJpaEntity(UUID id, UUID sellerId, UUID categoryId, UUID inspectorId, String title,
+    public ProductJpaEntity(UUID productId, UUID sellerId, UUID categoryId, UUID inspectorId, String title,
                             String description, Long price, Long suggestedPrice, ProductGrade grade,
                             ProductStatus status, InspectionStatus inspectionStatus,
                             List<ProductImageJpaEntity> images,  boolean deleted, Instant deletedAt,
                             Instant createdAt, Instant updatedAt) {
-        this.id = id;
+        this.productId = productId;
         this.sellerId = sellerId;
         this.categoryId = categoryId;
         this.inspectorId = inspectorId;

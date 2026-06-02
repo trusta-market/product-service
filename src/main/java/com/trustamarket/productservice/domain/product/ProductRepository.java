@@ -8,8 +8,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface ProductRepository {
-    Optional<Product> findById(UUID id);
-    Optional<Product> findByIdWithImages(UUID id);
+    Optional<Product> findById(UUID productId);
+    Optional<Product> findByIdWithImages(UUID productId);
     Page<Product> findBySellerId(UUID sellerId, Pageable pageable);
     Page<Product> findByCategoryId(UUID categoryId, Pageable pageable);
     List<Product> findTop10ByOrderByCreatedAtDesc();

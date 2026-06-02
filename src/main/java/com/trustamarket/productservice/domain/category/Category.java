@@ -16,7 +16,7 @@ import java.util.UUID;
 public class Category {
     @Id // 3. PK(기본키) 설정도 확인 필요
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
+    private UUID categoryId;
 
     private String name;
 
@@ -40,9 +40,9 @@ public class Category {
     private Instant deletedAt;
 
     @Builder
-    public Category(UUID id, String name, Category parent,
+    public Category(UUID categoryId, String name, Category parent,
                     int depth, int displayOrder, Integer inspectionThreshold, InspectionPolicy inspectionPolicy) {
-        this.id = id;
+        this.categoryId = categoryId;
         this.name = name;
         this.parent = parent;
         this.depth = depth;

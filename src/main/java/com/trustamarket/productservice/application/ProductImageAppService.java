@@ -65,7 +65,7 @@ public class ProductImageAppService {
 
         // 외부 저장소 삭제 전, 대상 이미지가 유효한지 확인
         ProductImage target = product.getImages().stream()
-                .filter(img -> !img.isDeleted() && img.getId().equals(imageId))
+                .filter(img -> !img.isDeleted() && img.getImageId().equals(imageId))
                 .findFirst()
                 .orElseThrow(() -> new ImageNotFoundException(ProductErrorCode.IMAGE_NOT_FOUND)); // 여기서 에러나면 저장소 삭제는 실행 불가
         product.removeImage(imageId);
