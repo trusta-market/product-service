@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import com.trustamarket.productservice.domain.category.InspectionPolicy;
 
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -38,9 +39,16 @@ public class CategoryJpaEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "inspection_policy", length = 20)
     private InspectionPolicy inspectionPolicy;
+
+    @Column(nullable = false)
+    private boolean deleted = false;
+
+    @Column
+    private Instant deletedAt;
+
     @Builder
     public CategoryJpaEntity(UUID id, String name, CategoryJpaEntity parent,
-                             int depth, int displayOrder, Integer inspectionThreshold, InspectionPolicy inspectionPolicy) {
+                             int depth, int displayOrder, Integer inspectionThreshold, InspectionPolicy inspectionPolicy, boolean deleted, Instant deletedAt) {
         this.id = id;
         this.name = name;
         this.parent = parent;
@@ -48,5 +56,7 @@ public class CategoryJpaEntity {
         this.displayOrder = displayOrder;
         this.inspectionThreshold = inspectionThreshold;
         this.inspectionPolicy    = inspectionPolicy;
+        this.deleted = deleted;
+        this.deletedAt = deletedAt;
     }
 }

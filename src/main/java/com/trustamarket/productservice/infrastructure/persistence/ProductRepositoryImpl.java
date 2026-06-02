@@ -24,54 +24,40 @@ public class ProductRepositoryImpl implements ProductRepository {
 
     @Override
     public Optional<Product> findById(UUID id) {
-        return productJpaRepository.findById(id)
-                .map(productMapper::toDomain);
+        // 내부 시스템 조회 — deleted 무관 (이벤트 처리 등)
+        return productJpaRepository.findById(id).map(productMapper::toDomain);
     }
 
     @Override
     public Optional<Product> findByIdWithImages(UUID id) {
-        // JpaRepository에 정의된 @EntityGraph 메서드 활용
-        return productJpaRepository.findById(id)
-                .map(productMapper::toDomain);
+        // 외부 노출용 — 소프트 삭제 제외
+        return productJpaRepository.findByIdAndDeletedFalse(id).map(productMapper::toDomain);
     }
 
     @Override
     public Page<Product> findBySellerId(UUID sellerId, Pageable pageable) {
         return productJpaRepository
-                .findBySellerIdOrderByCreatedAtDesc(sellerId, pageable)
+                .findBySellerIdAndDeletedFalseOrderByCreatedAtDesc(sellerId, pageable)
                 .map(productMapper::toDomain);
     }
 
     @Override
     public Page<Product> findByCategoryId(UUID categoryId, Pageable pageable) {
-        // 기본적으로 '판매 중'인 상품만 조회하도록 도메인 정책 반영
         return productJpaRepository
-                .findByCategoryIdAndStatusOrderByCreatedAtDesc(
-                        categoryId,
-                        ProductStatus.ON_SALE,
-                        pageable
-                )
+                .findByCategoryIdAndStatusAndDeletedFalseOrderByCreatedAtDesc(categoryId, ProductStatus.ON_SALE, pageable)
                 .map(productMapper::toDomain);
     }
 
     @Override
     public List<Product> findTop10ByOrderByCreatedAtDesc() {
-        return productJpaRepository.findTop10ByOrderByCreatedAtDesc()
-                .stream()
-                .map(productMapper::toDomain)
-                .collect(Collectors.toList());
+        return productJpaRepository
+                .findTop10ByDeletedFalseAndStatusOrderByCreatedAtDesc(ProductStatus.ON_SALE)
+                .stream().map(productMapper::toDomain).collect(Collectors.toList());
     }
 
     @Override
     public Product save(Product product) {
-        // 도메인 -> 엔티티 변환 후 저장, 다시 도메인으로 변환하여 반환
         ProductJpaEntity jpaEntity = productMapper.toJpaEntity(product);
-        ProductJpaEntity savedEntity = productJpaRepository.save(jpaEntity);
-        return productMapper.toDomain(savedEntity);
-    }
-
-    @Override
-    public void deleteById(UUID id) {
-        productJpaRepository.deleteById(id);
+        return productMapper.toDomain(productJpaRepository.save(jpaEntity));
     }
 }

@@ -10,15 +10,16 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface CategoryJpaRepository extends JpaRepository<CategoryJpaEntity, UUID> {
-    @Query("select c from CategoryJpaEntity c left join fetch c.parent where c.id = :id")
+
+    @Query("select c from CategoryJpaEntity c left join fetch c.parent where c.id = :id and c.deleted = false")
     Optional<CategoryJpaEntity> findByIdWithParent(@Param("id") UUID id);
 
-    @Query("select c from CategoryJpaEntity c left join fetch c.parent")
+    @Query("select c from CategoryJpaEntity c left join fetch c.parent where c.deleted = false")
     List<CategoryJpaEntity> findAllWithParent();
 
-    @Query("select c from CategoryJpaEntity c left join fetch c.parent where c.parent is null")
+    @Query("select c from CategoryJpaEntity c left join fetch c.parent where c.parent is null and c.deleted = false")
     List<CategoryJpaEntity> findByParentIsNullWithParent();
 
-    @Query("select c from CategoryJpaEntity c left join fetch c.parent where c.parent.id = :parentId")
+    @Query("select c from CategoryJpaEntity c left join fetch c.parent where c.parent.id = :parentId and c.deleted = false")
     List<CategoryJpaEntity> findByParentIdWithParent(@Param("parentId") UUID parentId);
 }
