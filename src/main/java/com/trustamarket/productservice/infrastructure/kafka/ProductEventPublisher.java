@@ -71,11 +71,12 @@ public class ProductEventPublisher implements ProductEventPublishPort {
     @Override
     public void publishInspectionRequested(UUID productId, UUID sellerId, UUID centerId, long originalPriceAmount, String currency) {
         try {
+            UUID eventId = UUID.randomUUID();
             InspectionRequestedEvent event = new InspectionRequestedEvent(
-                    productId, sellerId, centerId, originalPriceAmount, currency
+                    eventId, productId, sellerId, centerId, originalPriceAmount, currency
             );
             kafkaTemplate.send(INSPECTION_REQUESTED_TOPIC, productId.toString(), objectMapper.writeValueAsString(event));
-            log.info("InspectionRequestedEvent 발행 완료 - productId: {}", productId);
+            log.info("InspectionRequestedEvent 발행 완료 - eventId: {}, productId: {}", eventId, productId);
         } catch (Exception e) {
             log.error("InspectionRequestedEvent 발행 실패 - productId: {}", productId, e);
         }
@@ -85,6 +86,7 @@ public class ProductEventPublisher implements ProductEventPublishPort {
     @Override
     public void publishInspectionPriceAccepted(Product product) {
         try {
+            UUID eventId = UUID.randomUUID();
             InspectionPriceAcceptedEvent event = new InspectionPriceAcceptedEvent(
                     product.getProductId(),
                     product.getSellerId(),
@@ -101,6 +103,7 @@ public class ProductEventPublisher implements ProductEventPublishPort {
     @Override
     public void publishInspectionPriceRejected(Product product, String reason) {
         try {
+            UUID eventId = UUID.randomUUID();
             InspectionPriceRejectedEvent event = new InspectionPriceRejectedEvent(
                     product.getProductId(),
                     product.getSellerId(),
@@ -124,7 +127,9 @@ public class ProductEventPublisher implements ProductEventPublishPort {
     ) {}
 
     // inspection-service, delivery-service가 소비 → Inspection 생성 및 배송 생성
+    // eventId: 소비자 Inbox 멱등성 키. at-least-once 재배달 시 동일 eventId로 중복 처리 차단.
     public record InspectionRequestedEvent(
+            UUID eventId,
             UUID productId,
             UUID sellerId,
             UUID centerId,
@@ -134,6 +139,7 @@ public class ProductEventPublisher implements ProductEventPublishPort {
 
     // inspection-service가 소비 → inspection.acceptPrice() 호출
     public record InspectionPriceAcceptedEvent(
+            UUID eventId,
             UUID productId,
             UUID sellerId,
             Long finalPrice
@@ -141,6 +147,7 @@ public class ProductEventPublisher implements ProductEventPublishPort {
 
     // inspection-service가 소비 → inspection.rejectPrice() 호출
     public record InspectionPriceRejectedEvent(
+            UUID eventId,
             UUID productId,
             UUID sellerId,
             String reason
