@@ -9,6 +9,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -73,8 +74,8 @@ public class CategoryController {
 
     // 카테고리 삭제 (관리자용)
     @DeleteMapping("/{categoryId}")
-    public CommonResponse<Void> delete(@PathVariable UUID categoryId) {
+    public ResponseEntity<Void> delete(@PathVariable UUID categoryId) {
         categoryService.delete(categoryId);
-        return CommonResponse.of(HttpStatus.OK.value(), null);
+        return ResponseEntity.noContent().build();
     }
 }
