@@ -1,5 +1,6 @@
 package com.trustamarket.productservice.presentation.controller;
 
+import com.trustamarket.common.response.CommonResponse;
 import com.trustamarket.common.util.SecurityUtil;
 import com.trustamarket.productservice.application.ProductImageAppService;
 import com.trustamarket.productservice.domain.product.Product;
@@ -37,13 +38,13 @@ public class ProductImageController {
     }
 
     @DeleteMapping("/{imageId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void removeImage(
+    public CommonResponse<Void> removeImage(
             @PathVariable UUID productId,
             @PathVariable UUID imageId
     ) {
         UUID sellerId = SecurityUtil.getCurrentUserIdOrThrow();
         productImageAppService.removeImage(productId, sellerId, imageId);
+        return CommonResponse.of(HttpStatus.OK.value(), null);
     }
 
     @PatchMapping("/{imageId}/thumbnail")

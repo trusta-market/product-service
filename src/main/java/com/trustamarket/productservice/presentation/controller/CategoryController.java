@@ -1,5 +1,6 @@
 package com.trustamarket.productservice.presentation.controller;
 
+import com.trustamarket.common.response.CommonResponse;
 import com.trustamarket.productservice.application.CategoryService;
 import com.trustamarket.productservice.domain.category.Category;
 import com.trustamarket.productservice.domain.category.InspectionPolicy;
@@ -8,6 +9,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -72,8 +74,8 @@ public class CategoryController {
 
     // 카테고리 삭제 (관리자용)
     @DeleteMapping("/{categoryId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable UUID categoryId) {
+    public ResponseEntity<Void> delete(@PathVariable UUID categoryId) {
         categoryService.delete(categoryId);
+        return ResponseEntity.noContent().build();
     }
 }
