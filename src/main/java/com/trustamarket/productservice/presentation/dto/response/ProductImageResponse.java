@@ -13,7 +13,7 @@ import java.util.UUID;
 @AllArgsConstructor(access = AccessLevel.PRIVATE) // 빌더 외의 직접 생성을 제한
 public class ProductImageResponse {
 
-    private final UUID id;
+    private final UUID imageId;
     private final String imageUrl;
     private final int sortOrder;
     private final boolean isThumbnail;
@@ -23,7 +23,7 @@ public class ProductImageResponse {
         if (image == null) return null;
 
         return ProductImageResponse.builder()
-                .id(image.getId())
+                .imageId(image.getImageId())
                 .imageUrl(image.getImageUrl())
                 .sortOrder(image.getSortOrder())
                 .isThumbnail(image.isThumbnail())

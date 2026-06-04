@@ -33,7 +33,7 @@ public class ProductEventPublisher implements ProductEventPublishPort {
     public void publishProductCreated(Product product) {
         try {
             ProductCreatedEvent event = new ProductCreatedEvent(
-                    product.getId(),
+                    product.getProductId(),
                     product.getSellerId(),
                     product.getCategoryId(),
                     product.getPrice(),
@@ -43,12 +43,12 @@ public class ProductEventPublisher implements ProductEventPublishPort {
             // key로 productId를 사용 → 같은 상품 이벤트는 항상 같은 파티션으로
             kafkaTemplate.send(
                     PRODUCT_CREATED_TOPIC,
-                    product.getId().toString(),
+                    product.getProductId().toString(),
                     objectMapper.writeValueAsString(event)
             );
-            log.info("ProductCreatedEvent 발행 완료 - productId: {}", product.getId());
+            log.info("ProductCreatedEvent 발행 완료 - productId: {}", product.getProductId());
         } catch (Exception e) {
-            log.error("ProductCreatedEvent 발행 실패 - productId: {}", product.getId(), e);
+            log.error("ProductCreatedEvent 발행 실패 - productId: {}", product.getProductId(), e);
         }
     }
 
@@ -88,15 +88,14 @@ public class ProductEventPublisher implements ProductEventPublishPort {
         try {
             UUID eventId = UUID.randomUUID();
             InspectionPriceAcceptedEvent event = new InspectionPriceAcceptedEvent(
-                    eventId,
-                    product.getId(),
+                    product.getProductId(),
                     product.getSellerId(),
                     product.getPrice()  // 수락 후 확정된 최종가격
             );
-            kafkaTemplate.send(INSPECTION_PRICE_ACCEPTED_TOPIC, product.getId().toString(), objectMapper.writeValueAsString(event));
-            log.info("InspectionPriceAcceptedEvent 발행 완료 - eventId: {}, productId: {}", eventId, product.getId());
+            kafkaTemplate.send(INSPECTION_PRICE_ACCEPTED_TOPIC, product.getProductId().toString(), objectMapper.writeValueAsString(event));
+            log.info("InspectionPriceAcceptedEvent 발행 완료 - productId: {}", product.getProductId());
         } catch (Exception e) {
-            log.error("InspectionPriceAcceptedEvent 발행 실패 - productId: {}", product.getId(), e);
+            log.error("InspectionPriceAcceptedEvent 발행 실패 - productId: {}", product.getProductId(), e);
         }
     }
 
@@ -106,15 +105,14 @@ public class ProductEventPublisher implements ProductEventPublishPort {
         try {
             UUID eventId = UUID.randomUUID();
             InspectionPriceRejectedEvent event = new InspectionPriceRejectedEvent(
-                    eventId,
-                    product.getId(),
+                    product.getProductId(),
                     product.getSellerId(),
                     reason
             );
-            kafkaTemplate.send(INSPECTION_PRICE_REJECTED_TOPIC, product.getId().toString(), objectMapper.writeValueAsString(event));
-            log.info("InspectionPriceRejectedEvent 발행 완료 - eventId: {}, productId: {}", eventId, product.getId());
+            kafkaTemplate.send(INSPECTION_PRICE_REJECTED_TOPIC, product.getProductId().toString(), objectMapper.writeValueAsString(event));
+            log.info("InspectionPriceRejectedEvent 발행 완료 - productId: {}", product.getProductId());
         } catch (Exception e) {
-            log.error("InspectionPriceRejectedEvent 발행 실패 - productId: {}", product.getId(), e);
+            log.error("InspectionPriceRejectedEvent 발행 실패 - productId: {}", product.getProductId(), e);
         }
     }
 

@@ -5,10 +5,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface CategoryRepository {
-    Optional<Category> findById(UUID id);
+    Optional<Category> findById(UUID categoryId);
     List<Category> findAll();
     List<Category> findByParentIsNull();
     List<Category> findByParentId(UUID parentId);
     Category save(Category category);
-    void deleteById(UUID id);
 }

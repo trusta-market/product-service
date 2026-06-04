@@ -15,12 +15,12 @@ import java.util.UUID;
 @Table(name = "p_product_images")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@EqualsAndHashCode(of = "id")
+@EqualsAndHashCode(of = "imageId")
 public class ProductImage {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
+    private UUID imageId;
     
     private String imageUrl;
     private int sortOrder;
@@ -30,13 +30,13 @@ public class ProductImage {
     private boolean isDeleted = false;
     private Instant deletedAt;
 
-    private ProductImage(UUID id, String imageUrl, int sortOrder, boolean isThumbnail, boolean isDeleted, Instant deletedAt) {
+    private ProductImage(UUID imageId, String imageUrl, int sortOrder, boolean isThumbnail, boolean isDeleted, Instant deletedAt) {
         validate(imageUrl);
-        this.id = id;
+        this.imageId = imageId;
         this.imageUrl = imageUrl;
         this.sortOrder = sortOrder;
         this.isThumbnail = isThumbnail;
-        this.isDeleted = isDeleted; // 삭제 상태 복원
+        this.isDeleted = isDeleted;
         this.deletedAt = deletedAt;
     }
 

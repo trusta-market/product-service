@@ -23,7 +23,7 @@ public class ProductJpaEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @EqualsAndHashCode.Include
-    private UUID id;
+    private UUID productId;
 
     @Column(nullable = false)
     private UUID sellerId;
@@ -61,6 +61,12 @@ public class ProductJpaEntity {
     @OrderBy("sortOrder ASC")
     private List<ProductImageJpaEntity> images = new ArrayList<>();
 
+    @Column(nullable = false)
+    private boolean deleted = false;
+
+    @Column
+    private Instant deletedAt;
+
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
@@ -70,12 +76,12 @@ public class ProductJpaEntity {
     private Instant updatedAt;
 
     @Builder
-    public ProductJpaEntity(UUID id, UUID sellerId, UUID categoryId, UUID inspectorId, String title,
+    public ProductJpaEntity(UUID productId, UUID sellerId, UUID categoryId, UUID inspectorId, String title,
                             String description, Long price, Long suggestedPrice, ProductGrade grade,
                             ProductStatus status, InspectionStatus inspectionStatus,
-                            List<ProductImageJpaEntity> images,
+                            List<ProductImageJpaEntity> images,  boolean deleted, Instant deletedAt,
                             Instant createdAt, Instant updatedAt) {
-        this.id = id;
+        this.productId = productId;
         this.sellerId = sellerId;
         this.categoryId = categoryId;
         this.inspectorId = inspectorId;
@@ -90,6 +96,8 @@ public class ProductJpaEntity {
             this.images = new ArrayList<>(images);
             this.images.forEach(img -> img.assignProduct(this));
         }
+        this.deleted = deleted;
+        this.deletedAt = deletedAt;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }

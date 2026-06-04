@@ -9,7 +9,7 @@ import java.util.UUID;
 // 다른 서비스(주로 order-service)가 주문 생성 시 product 검증/snapshot 용도로 호출.
 // 외부 노출 ProductResponse 와 다르게 imageUrls / inspectionStatus 등 상세 X — 주문 도메인이 필요한 최소 필드만.
 public record ProductInfoResponse(
-        UUID id,
+        UUID productId,
         UUID sellerId,
         String title,
         Long price,
@@ -17,7 +17,7 @@ public record ProductInfoResponse(
 ) {
     public static ProductInfoResponse from(Product product) {
         return new ProductInfoResponse(
-                product.getId(),
+                product.getProductId(),
                 product.getSellerId(),
                 product.getTitle(),
                 product.getPrice(),

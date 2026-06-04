@@ -20,45 +20,30 @@ public class CategoryRepositoryImpl implements CategoryRepository {
     private final CategoryMapper categoryMapper;
 
     @Override
-    public Optional<Category> findById(UUID id) {
-        return categoryJpaRepository.findByIdWithParent(id)
-                .map(categoryMapper::toDomain);
+    public Optional<Category> findById(UUID categoryId) {
+        return categoryJpaRepository.findByIdWithParent(categoryId).map(categoryMapper::toDomain);
     }
 
     @Override
     public List<Category> findAll() {
-        return categoryJpaRepository.findAllWithParent()
-                .stream()
-                .map(categoryMapper::toDomain)
-                .collect(Collectors.toList());
+        return categoryJpaRepository.findAllWithParent().stream()
+                .map(categoryMapper::toDomain).collect(Collectors.toList());
     }
 
     @Override
     public List<Category> findByParentIsNull() {
-        return categoryJpaRepository.findByParentIsNullWithParent()
-                .stream()
-                .map(categoryMapper::toDomain)
-                .collect(Collectors.toList());
+        return categoryJpaRepository.findByParentIsNullWithParent().stream()
+                .map(categoryMapper::toDomain).collect(Collectors.toList());
     }
 
     @Override
     public List<Category> findByParentId(UUID parentId) {
-        return categoryJpaRepository.findByParentIdWithParent(parentId)
-                .stream()
-                .map(categoryMapper::toDomain)
-                .collect(Collectors.toList());
+        return categoryJpaRepository.findByParentIdWithParent(parentId).stream()
+                .map(categoryMapper::toDomain).collect(Collectors.toList());
     }
 
     @Override
     public Category save(Category category) {
-        CategoryJpaEntity entity = categoryMapper.toJpaEntity(category);
-        CategoryJpaEntity savedEntity = categoryJpaRepository.save(entity);
-
-        return categoryMapper.toDomain(savedEntity);
-    }
-
-    @Override
-    public void deleteById(UUID id) {
-        categoryJpaRepository.deleteById(id);
+        return categoryMapper.toDomain(categoryJpaRepository.save(categoryMapper.toJpaEntity(category)));
     }
 }

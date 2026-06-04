@@ -1,47 +1,44 @@
 package com.trustamarket.productservice.domain.category;
 
-import jakarta.persistence.*;
-import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
+import java.time.Instant;
 import java.util.UUID;
 
-@Entity
-@Table(name = "p_categories")
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Category {
-    @Id // 3. PK(기본키) 설정도 확인 필요
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
 
-    private String name;
+    private final UUID categoryId;
+    private final String name;
+    private final Category parent;
+    private final int depth;
+    private final int displayOrder;
+    private final Integer inspectionThreshold;
+    private final InspectionPolicy inspectionPolicy;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_id")
-    private Category parent;
-
-    private int depth;
-    private int displayOrder;
-    @Column(name = "inspection_threshold")
-    private Integer inspectionThreshold;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "inspection_policy", length = 20)
-    private InspectionPolicy inspectionPolicy;
+    private boolean deleted;
+    private Instant deletedAt;
 
     @Builder
-    public Category(UUID id, String name, Category parent,
-                    int depth, int displayOrder, Integer inspectionThreshold, InspectionPolicy inspectionPolicy) {
-        this.id = id;
+    public Category(UUID categoryId, String name, Category parent,
+                    int depth, int displayOrder, Integer inspectionThreshold,
+                    InspectionPolicy inspectionPolicy,
+                    boolean deleted, Instant deletedAt) {
+        this.categoryId = categoryId;
         this.name = name;
         this.parent = parent;
         this.depth = depth;
         this.displayOrder = displayOrder;
         this.inspectionThreshold = inspectionThreshold;
-        this.inspectionPolicy    = inspectionPolicy;
+        this.inspectionPolicy = inspectionPolicy;
+        this.deleted = deleted;
+        this.deletedAt = deletedAt;
+    }
+
+    public void softDelete() {
+        this.deleted = true;
+        this.deletedAt = Instant.now();
     }
 
     public InspectionPolicy getEffectivePolicy() {
@@ -55,6 +52,7 @@ public class Category {
                 ? this.inspectionThreshold
                 : CategoryThreshold.getThreshold(this.name);
     }
+
     public boolean requiresInspection(Long price) {
         return switch (getEffectivePolicy()) {
             case ALWAYS      -> true;
@@ -66,4 +64,3 @@ public class Category {
     public boolean isRoot() { return this.parent == null; }
     public boolean isSubCategory() { return this.parent != null; }
 }
-

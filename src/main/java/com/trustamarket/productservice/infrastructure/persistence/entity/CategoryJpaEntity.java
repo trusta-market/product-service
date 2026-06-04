@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import com.trustamarket.productservice.domain.category.InspectionPolicy;
 
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -17,7 +18,7 @@ public class CategoryJpaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
+    private UUID categoryId;
 
     @Column(nullable = false)
     private String name;
@@ -38,15 +39,27 @@ public class CategoryJpaEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "inspection_policy", length = 20)
     private InspectionPolicy inspectionPolicy;
+
+    // 영속 상태(soft delete)는 JpaEntity에서만 관리
+    @Column(nullable = false)
+    private boolean deleted = false;
+
+    @Column
+    private Instant deletedAt;
+
     @Builder
-    public CategoryJpaEntity(UUID id, String name, CategoryJpaEntity parent,
-                             int depth, int displayOrder, Integer inspectionThreshold, InspectionPolicy inspectionPolicy) {
-        this.id = id;
+    public CategoryJpaEntity(UUID categoryId, String name, CategoryJpaEntity parent,
+                             int depth, int displayOrder, Integer inspectionThreshold,
+                             InspectionPolicy inspectionPolicy,
+                             boolean deleted, Instant deletedAt) {
+        this.categoryId = categoryId;
         this.name = name;
         this.parent = parent;
         this.depth = depth;
         this.displayOrder = displayOrder;
         this.inspectionThreshold = inspectionThreshold;
-        this.inspectionPolicy    = inspectionPolicy;
+        this.inspectionPolicy = inspectionPolicy;
+        this.deleted = deleted;
+        this.deletedAt = deletedAt;
     }
 }

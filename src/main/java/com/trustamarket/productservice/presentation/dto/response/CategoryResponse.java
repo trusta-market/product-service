@@ -14,7 +14,7 @@ import java.util.UUID;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class CategoryResponse {
 
-    private final UUID id;
+    private final UUID categoryId;
     private final String name;
     private final int depth;
     private final int displayOrder;
@@ -27,13 +27,13 @@ public class CategoryResponse {
         if (category == null) return null;
 
         return CategoryResponse.builder()
-                .id(category.getId())
+                .categoryId(category.getCategoryId())
                 .name(category.getName())
                 .depth(category.getDepth())
                 .displayOrder(category.getDisplayOrder())
                 .inspectionThreshold(category.getInspectionThreshold())
                 .inspectionPolicy(category.getEffectivePolicy())
-                .parentId(category.getParent() != null ? category.getParent().getId() : null)
+                .parentId(category.getParent() != null ? category.getParent().getCategoryId() : null)
                 .parentName(category.getParent() != null ? category.getParent().getName() : null)
                 .build();
     }

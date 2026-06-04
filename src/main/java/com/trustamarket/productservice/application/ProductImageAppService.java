@@ -26,6 +26,13 @@ public class ProductImageAppService {
 
     private static final String IMAGE_DIRECTORY = "products";
 
+    private Product findActiveProduct(UUID productId) {
+        Product product = productRepository.findByIdWithImages(productId)
+                .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
+        if (product.isDeleted()) throw new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND);
+        return product;
+    }
+
     // 이미지 업로드 후 상품에 추가
     @Transactional
     public Product addImage(UUID productId, UUID sellerId, MultipartFile file) {
@@ -58,7 +65,7 @@ public class ProductImageAppService {
 
         // 외부 저장소 삭제 전, 대상 이미지가 유효한지 확인
         ProductImage target = product.getImages().stream()
-                .filter(img -> !img.isDeleted() && img.getId().equals(imageId))
+                .filter(img -> !img.isDeleted() && img.getImageId().equals(imageId))
                 .findFirst()
                 .orElseThrow(() -> new ImageNotFoundException(ProductErrorCode.IMAGE_NOT_FOUND)); // 여기서 에러나면 저장소 삭제는 실행 불가
         product.removeImage(imageId);

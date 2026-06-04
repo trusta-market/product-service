@@ -24,6 +24,15 @@ public class ProductQueryService {
 
     // 상품 단건 조회 (이미지 포함)
     public Product findById(UUID productId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
+        if (product.isDeleted()) {
+            throw new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND);
+        }
+        return product;
+    }
+
+    public Product findByIdInternal(UUID productId) {
         return productRepository.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
     }

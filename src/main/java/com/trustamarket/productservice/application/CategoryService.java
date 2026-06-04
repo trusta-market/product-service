@@ -50,8 +50,9 @@ public class CategoryService {
 
     @Transactional
     public void delete(UUID categoryId) {
-        categoryRepository.findById(categoryId)
+        Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new CategoryNotFoundException(ProductErrorCode.CATEGORY_NOT_FOUND));
-        categoryRepository.deleteById(categoryId);
+        category.softDelete();
+        categoryRepository.save(category);
     }
 }
