@@ -18,6 +18,10 @@ public class ProductEventPublisher {
             String inspectionStatus
     ) {}
 
+    public record ProductDeletedEvent(
+            UUID productId
+    ) {}
+    
     public record InspectionRequestedEvent(
             UUID eventId,
             UUID productId,
