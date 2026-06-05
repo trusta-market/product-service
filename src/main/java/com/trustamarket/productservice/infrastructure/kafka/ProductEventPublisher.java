@@ -88,6 +88,7 @@ public class ProductEventPublisher implements ProductEventPublishPort {
         try {
             UUID eventId = UUID.randomUUID();
             InspectionPriceAcceptedEvent event = new InspectionPriceAcceptedEvent(
+                    eventId,
                     product.getProductId(),
                     product.getSellerId(),
                     product.getPrice()  // 수락 후 확정된 최종가격
@@ -105,6 +106,7 @@ public class ProductEventPublisher implements ProductEventPublishPort {
         try {
             UUID eventId = UUID.randomUUID();
             InspectionPriceRejectedEvent event = new InspectionPriceRejectedEvent(
+                    eventId,
                     product.getProductId(),
                     product.getSellerId(),
                     reason

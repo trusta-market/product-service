@@ -20,16 +20,7 @@ public class ProductDomainService {
     }
 
     public void validateStatusTransition(ProductStatus current, ProductStatus next) {
-        boolean valid = switch (current) {
-            case PENDING_INSPECTION -> next == ProductStatus.ON_SALE;
-            case INSPECTION_REJECTED -> next == ProductStatus.PENDING_INSPECTION;
-            case ON_SALE            -> next == ProductStatus.RESERVED
-                                    || next == ProductStatus.SOLD_OUT;
-            case RESERVED           -> next == ProductStatus.SOLD_OUT
-                                    || next == ProductStatus.ON_SALE;
-            case SOLD_OUT           -> false;
-        };
-        if (!valid) {
+        if (!next.canTransitionFrom(current)) {
             throw new InvalidStatusTransitionException(ProductErrorCode.INVALID_STATUS_TRANSITION);
         }
     }
