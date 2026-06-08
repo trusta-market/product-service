@@ -16,8 +16,7 @@ import com.trustamarket.productservice.domain.product.ProductGrade;
 import com.trustamarket.productservice.domain.product.ProductRepository;
 import com.trustamarket.productservice.domain.product.ProductStatus;
 import com.trustamarket.productservice.infrastructure.kafka.ProductEventPublisher;
-import com.trustamarket.productservice.infrastructure.persistence.OutboxEventJpaRepository;
-import com.trustamarket.productservice.infrastructure.persistence.entity.OutboxEventJpaEntity;
+import com.trustamarket.productservice.application.port.OutboxEventRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,7 +32,7 @@ public class ProductCommandService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final ProductDomainService productDomainService;
-    private final OutboxEventJpaRepository outboxEventRepository;
+    private final OutboxEventRepository outboxEventRepository;
     private final ObjectMapper objectMapper;
 
      // 명령용 활성 상품 조회 — 소프트 삭제된 상품은 404 처리, 판매자가 직접 호출하는 모든 명령 메서드에서 사용
@@ -116,13 +115,14 @@ public class ProductCommandService {
 
     // 상품 삭제 — 이미 삭제된 상품 재삭제 차단
     public void deleteProduct(UUID productId, UUID sellerId) {
-        Product product = findActiveProduct(productId);  // findById → findActiveProduct
+        Product product = findActiveProduct(productId);
         if (!product.isOwnedBy(sellerId)) {
             throw new ProductAccessDeniedException(ProductErrorCode.PRODUCT_ACCESS_DENIED);
         }
         product.softDelete();
         productRepository.save(product);
-        saveOutboxEvent(ProductEventPublisher.PRODUCT_DELETED_TOPIC, productId.toString());
+        saveOutboxEvent(ProductEventPublisher.PRODUCT_DELETED_TOPIC,
+                new ProductEventPublisher.ProductDeletedEvent(productId));
     }
 
     // 상품 상태 변경 — 삭제된 상품 차단
@@ -141,7 +141,7 @@ public class ProductCommandService {
     // 검수 결과 수신 — 삭제된 상품 차단
     public Product receiveInspectionResult(UUID productId, ProductGrade grade,
                                            Long suggestedPrice, UUID inspectorId) {
-        Product product = findActiveProduct(productId);  // findById → findActiveProduct
+        Product product = findProductInternal(productId);
         product.receiveInspectionResult(grade, suggestedPrice, inspectorId);
         return productRepository.save(product);
     }
@@ -196,12 +196,7 @@ public class ProductCommandService {
 
     private void saveOutboxEvent(String topic, Object payload) {
         try {
-            outboxEventRepository.save(
-                    OutboxEventJpaEntity.builder()
-                            .topic(topic)
-                            .payload(objectMapper.writeValueAsString(payload))
-                            .build()
-            );
+            outboxEventRepository.save(topic, objectMapper.writeValueAsString(payload));
         } catch (JsonProcessingException e) {
             throw new IllegalStateException("Outbox 이벤트 직렬화 실패: " + topic, e);
         }
