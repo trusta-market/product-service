@@ -39,7 +39,7 @@ public class ProductResponse {
         if (product == null) return null;
 
         return ProductResponse.builder()
-                .productId(product.getId())
+                .productId(product.getProductId())
                 .sellerId(product.getSellerId())
                 .categoryId(product.getCategoryId())
                 .title(product.getTitle())
