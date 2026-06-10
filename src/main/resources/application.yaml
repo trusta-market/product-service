@@ -18,6 +18,7 @@ spring:
       on-profile: local
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: none
   flyway:
-    enabled: false
+    enabled: true
+    locations: classpath:db/changelog/sql
