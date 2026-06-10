@@ -5,10 +5,8 @@ import com.trustamarket.productservice.infrastructure.persistence.entity.OutboxE
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -18,38 +16,20 @@ import java.util.List;
 public class OutboxEventPublisher {
 
     private final OutboxEventJpaRepository outboxEventRepository;
-    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final OutboxEventProcessor outboxEventProcessor;
 
     @Value("${trusta.outbox.max-retry:5}")
     private int maxRetry;
 
     @Scheduled(fixedDelayString = "${trusta.outbox.poll-interval-ms:1000}")
-    @Transactional
     public void publishPendingEvents() {
         List<OutboxEventJpaEntity> events =
                 outboxEventRepository.findTop100ByPublishedFalseAndFailedFalseOrderByCreatedAtAsc();
 
         for (OutboxEventJpaEntity event : events) {
-            try {
-                kafkaTemplate.send(event.getTopic(), event.getPayload()).get();
-                event.markPublished();
-                outboxEventRepository.saveAndFlush(event);
-                log.info("[Outbox] 발행 완료 - topic: {}, id: {}", event.getTopic(), event.getId());
-            } catch (Exception e) {
-                event.incrementRetryCount();
-
-                if (event.getRetryCount() >= maxRetry) {
-                    event.markFailed();
-                    outboxEventRepository.saveAndFlush(event);
-                    log.error("[Outbox] 최대 재시도({}) 초과, 격리 처리 — topic: {}, id: {}. 수동 확인 필요.",
-                            maxRetry, event.getTopic(), event.getId(), e);
-                    // failed=true 로 격리했으므로 다음 이벤트 처리 계속
-                    continue;
-                }
-
-                outboxEventRepository.saveAndFlush(event);
-                log.error("[Outbox] 발행 실패 - topic: {}, id: {}", event.getTopic(), event.getId(), e);
-                break; // 순서 보장을 위해 실패 시 이번 배치 중단, 다음 폴링에서 재시도
+            boolean shouldContinue = outboxEventProcessor.process(event, maxRetry);
+            if (!shouldContinue) {
+                break;
             }
         }
     }
