@@ -2,7 +2,7 @@ package com.trustamarket.productservice.infrastructure.kafka;
 
 import java.util.UUID;
 
-public class ProductEventPublisher {
+public class KafkaTopics {
 
     public static final String PRODUCT_CREATED_TOPIC         = "product.created";
     public static final String PRODUCT_DELETED_TOPIC         = "product.deleted";
@@ -21,7 +21,7 @@ public class ProductEventPublisher {
     public record ProductDeletedEvent(
             UUID productId
     ) {}
-    
+
     public record InspectionRequestedEvent(
             UUID eventId,
             UUID productId,
