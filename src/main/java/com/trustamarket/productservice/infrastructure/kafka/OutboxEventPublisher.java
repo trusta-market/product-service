@@ -4,6 +4,7 @@ import com.trustamarket.productservice.infrastructure.persistence.OutboxEventJpa
 import com.trustamarket.productservice.infrastructure.persistence.entity.OutboxEventJpaEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -22,6 +23,7 @@ public class OutboxEventPublisher {
     private int maxRetry;
 
     @Scheduled(fixedDelayString = "${trusta.outbox.poll-interval-ms:1000}")
+    @SchedulerLock(name = "outbox_publisher", lockAtMostFor = "PT30S", lockAtLeastFor = "PT1S")
     public void publishPendingEvents() {
         List<OutboxEventJpaEntity> events =
                 outboxEventRepository.findTop100ByPublishedFalseAndFailedFalseOrderByCreatedAtAsc();
