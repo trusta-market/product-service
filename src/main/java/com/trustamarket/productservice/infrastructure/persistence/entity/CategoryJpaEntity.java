@@ -18,6 +18,7 @@ public class CategoryJpaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "id")
     private UUID categoryId;
 
     @Column(nullable = false)
