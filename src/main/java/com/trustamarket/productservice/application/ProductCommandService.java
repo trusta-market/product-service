@@ -15,8 +15,13 @@ import com.trustamarket.productservice.domain.product.ProductDomainService;
 import com.trustamarket.productservice.domain.product.ProductGrade;
 import com.trustamarket.productservice.domain.product.ProductRepository;
 import com.trustamarket.productservice.domain.product.ProductStatus;
-import com.trustamarket.productservice.infrastructure.kafka.KafkaTopics;
 import com.trustamarket.productservice.application.port.OutboxEventRepository;
+import com.trustamarket.productservice.infrastructure.kafka.KafkaTopics;
+import com.trustamarket.productservice.application.event.kafka.ProductCreatedEvent;
+import com.trustamarket.productservice.application.event.kafka.ProductDeletedEvent;
+import com.trustamarket.productservice.application.event.kafka.InspectionRequestedEvent;
+import com.trustamarket.productservice.application.event.kafka.InspectionPriceAcceptedEvent;
+import com.trustamarket.productservice.application.event.kafka.InspectionPriceRejectedEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -68,7 +73,7 @@ public class ProductCommandService {
         Product savedProduct = productRepository.save(product);
 
         saveOutboxEvent(KafkaTopics.PRODUCT_CREATED_TOPIC,
-                new KafkaTopics.ProductCreatedEvent(
+                new ProductCreatedEvent(
                         savedProduct.getProductId(),
                         savedProduct.getSellerId(),
                         savedProduct.getCategoryId(),
@@ -91,7 +96,7 @@ public class ProductCommandService {
         product.submitForInspection();
         productRepository.save(product);
         saveOutboxEvent(KafkaTopics.INSPECTION_REQUESTED_TOPIC,
-                new KafkaTopics.InspectionRequestedEvent(
+                new InspectionRequestedEvent(
                         UUID.randomUUID(), productId, sellerId, centerId, product.getPrice(), "KRW"
                 )
         );
@@ -122,7 +127,7 @@ public class ProductCommandService {
         product.softDelete();
         productRepository.save(product);
         saveOutboxEvent(KafkaTopics.PRODUCT_DELETED_TOPIC,
-                new KafkaTopics.ProductDeletedEvent(productId));
+                new ProductDeletedEvent(productId));
     }
 
     // 상품 상태 변경 — 삭제된 상품 차단
@@ -155,7 +160,7 @@ public class ProductCommandService {
         product.acceptInspectionResult();
         Product saved = productRepository.save(product);
         saveOutboxEvent(KafkaTopics.INSPECTION_PRICE_ACCEPTED_TOPIC,
-                new KafkaTopics.InspectionPriceAcceptedEvent(
+                new InspectionPriceAcceptedEvent(
                         UUID.randomUUID(),
                         saved.getProductId(),
                         saved.getSellerId(),
@@ -173,7 +178,7 @@ public class ProductCommandService {
         product.rejectInspectionResult();
         Product saved = productRepository.save(product);
         saveOutboxEvent(KafkaTopics.INSPECTION_PRICE_REJECTED_TOPIC,
-                new KafkaTopics.InspectionPriceRejectedEvent(
+                new InspectionPriceRejectedEvent(
                         UUID.randomUUID(),
                         saved.getProductId(),
                         saved.getSellerId(),
