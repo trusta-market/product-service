@@ -24,7 +24,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_root_category_name
 
 --changeset Seungwon-Choi:2
 CREATE TABLE IF NOT EXISTS p_products (
-    product_id                UUID         NOT NULL,
+    product_id        UUID         NOT NULL,
     seller_id         UUID         NOT NULL,
     category_id       UUID         NOT NULL,
     inspector_id      UUID,
@@ -32,20 +32,20 @@ CREATE TABLE IF NOT EXISTS p_products (
     description       TEXT,
     price             BIGINT       NOT NULL,
     grade             VARCHAR(20),
-    status            VARCHAR(30),
-    inspection_status VARCHAR(30),
-    created_at        TIMESTAMPTZ,
-    updated_at        TIMESTAMPTZ,
-    PRIMARY KEY (category_id),
+    status            VARCHAR(30)  NOT NULL,
+    inspection_status VARCHAR(30)  NOT NULL,
+    created_at        TIMESTAMPTZ  NOT NULL,
+    updated_at        TIMESTAMPTZ  NOT NULL,
+    PRIMARY KEY (product_id),
     CONSTRAINT fk_products_category
         FOREIGN KEY (category_id) REFERENCES p_categories (category_id)
 );
 
 --changeset Seungwon-Choi:3
 CREATE TABLE IF NOT EXISTS p_product_images (
-    image_id           UUID    NOT NULL,
-    product_id   UUID    NOT NULL,
-    image_url    VARCHAR(500),
+    image_id     UUID         NOT NULL,
+    product_id   UUID         NOT NULL,
+    image_url    VARCHAR(500) NOT NULL,
     sort_order   INTEGER NOT NULL,
     is_thumbnail BOOLEAN NOT NULL,
     is_deleted   BOOLEAN NOT NULL,
