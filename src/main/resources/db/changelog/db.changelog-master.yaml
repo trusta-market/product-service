@@ -26,3 +26,6 @@ databaseChangeLog:
   - include:
       file: sql/V009__add_outbox_retry_fields.sql
       relativeToChangelogFile: true
+  - include:
+      file: sql/V010__rename_product_images_pk.sql
+      relativeToChangelogFile: true
