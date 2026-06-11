@@ -12,17 +12,14 @@ databaseChangeLog:
       file: sql/V004__add_suggested_price.sql
       relativeToChangelogFile: true
   - include:
-      file: sql/V005__add_created_at_index.sql
+      file: sql/V005__add_soft_delete_to_products.sql
       relativeToChangelogFile: true
   - include:
-      file: sql/V006__add_soft_delete_to_products.sql
+      file: sql/V006__add_soft_delete_to_categories.sql
       relativeToChangelogFile: true
   - include:
-      file: sql/V007__add_soft_delete_to_categories.sql
+      file: sql/V007__add_outbox_events.sql
       relativeToChangelogFile: true
   - include:
-      file: sql/V008__add_outbox_events.sql
-      relativeToChangelogFile: true
-  - include:
-      file: sql/V009__add_outbox_retry_fields.sql
+      file: sql/V008__add_outbox_retry_fields.sql
       relativeToChangelogFile: true
