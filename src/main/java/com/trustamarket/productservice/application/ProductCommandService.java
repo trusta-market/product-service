@@ -1,12 +1,12 @@
 package com.trustamarket.productservice.application;
 
-import com.trustamarket.productservice.application.event.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trustamarket.productservice.application.exception.CategoryNotFoundException;
 import com.trustamarket.productservice.application.exception.InvalidStatusTransitionException;
 import com.trustamarket.productservice.application.exception.ProductAccessDeniedException;
 import com.trustamarket.productservice.application.exception.ProductNotFoundException;
 import com.trustamarket.productservice.application.exception.errorcode.ProductErrorCode;
-import com.trustamarket.productservice.application.port.ProductEventPublishPort;
 import com.trustamarket.productservice.domain.category.Category;
 import com.trustamarket.productservice.domain.category.CategoryRepository;
 import com.trustamarket.productservice.domain.product.InspectionStatus;
@@ -15,8 +15,14 @@ import com.trustamarket.productservice.domain.product.ProductDomainService;
 import com.trustamarket.productservice.domain.product.ProductGrade;
 import com.trustamarket.productservice.domain.product.ProductRepository;
 import com.trustamarket.productservice.domain.product.ProductStatus;
+import com.trustamarket.productservice.application.port.OutboxEventRepository;
+import com.trustamarket.productservice.infrastructure.kafka.KafkaTopics;
+import com.trustamarket.productservice.application.event.kafka.ProductCreatedEvent;
+import com.trustamarket.productservice.application.event.kafka.ProductDeletedEvent;
+import com.trustamarket.productservice.application.event.kafka.InspectionRequestedEvent;
+import com.trustamarket.productservice.application.event.kafka.InspectionPriceAcceptedEvent;
+import com.trustamarket.productservice.application.event.kafka.InspectionPriceRejectedEvent;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,8 +37,8 @@ public class ProductCommandService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final ProductDomainService productDomainService;
-    private final ApplicationEventPublisher eventPublisher;
-    private final ProductEventPublishPort productEventPublishPort;
+    private final OutboxEventRepository outboxEventRepository;
+    private final ObjectMapper objectMapper;
 
      // 명령용 활성 상품 조회 — 소프트 삭제된 상품은 404 처리, 판매자가 직접 호출하는 모든 명령 메서드에서 사용
     private Product findActiveProduct(UUID productId) {
@@ -65,7 +71,16 @@ public class ProductCommandService {
         );
 
         Product savedProduct = productRepository.save(product);
-        eventPublisher.publishEvent(new ProductCreatedEvent(savedProduct));
+
+        saveOutboxEvent(KafkaTopics.PRODUCT_CREATED_TOPIC,
+                new ProductCreatedEvent(
+                        savedProduct.getProductId(),
+                        savedProduct.getSellerId(),
+                        savedProduct.getCategoryId(),
+                        savedProduct.getPrice(),
+                        savedProduct.getInspectionStatus().name()
+                )
+        );
         return savedProduct;
     }
 
@@ -80,8 +95,10 @@ public class ProductCommandService {
         }
         product.submitForInspection();
         productRepository.save(product);
-        productEventPublishPort.publishInspectionRequested(
-                productId, sellerId, centerId, product.getPrice(), "KRW"
+        saveOutboxEvent(KafkaTopics.INSPECTION_REQUESTED_TOPIC,
+                new InspectionRequestedEvent(
+                        UUID.randomUUID(), productId, sellerId, centerId, product.getPrice(), "KRW"
+                )
         );
     }
 
@@ -103,13 +120,14 @@ public class ProductCommandService {
 
     // 상품 삭제 — 이미 삭제된 상품 재삭제 차단
     public void deleteProduct(UUID productId, UUID sellerId) {
-        Product product = findActiveProduct(productId);  // findById → findActiveProduct
+        Product product = findActiveProduct(productId);
         if (!product.isOwnedBy(sellerId)) {
             throw new ProductAccessDeniedException(ProductErrorCode.PRODUCT_ACCESS_DENIED);
         }
         product.softDelete();
         productRepository.save(product);
-        eventPublisher.publishEvent(new ProductDeletedEvent(productId));
+        saveOutboxEvent(KafkaTopics.PRODUCT_DELETED_TOPIC,
+                new ProductDeletedEvent(productId));
     }
 
     // 상품 상태 변경 — 삭제된 상품 차단
@@ -128,7 +146,7 @@ public class ProductCommandService {
     // 검수 결과 수신 — 삭제된 상품 차단
     public Product receiveInspectionResult(UUID productId, ProductGrade grade,
                                            Long suggestedPrice, UUID inspectorId) {
-        Product product = findActiveProduct(productId);  // findById → findActiveProduct
+        Product product = findProductInternal(productId);
         product.receiveInspectionResult(grade, suggestedPrice, inspectorId);
         return productRepository.save(product);
     }
@@ -141,8 +159,14 @@ public class ProductCommandService {
         }
         product.acceptInspectionResult();
         Product saved = productRepository.save(product);
-        eventPublisher.publishEvent(new InspectionAcceptedEvent(saved));
-        return saved;
+        saveOutboxEvent(KafkaTopics.INSPECTION_PRICE_ACCEPTED_TOPIC,
+                new InspectionPriceAcceptedEvent(
+                        UUID.randomUUID(),
+                        saved.getProductId(),
+                        saved.getSellerId(),
+                        saved.getPrice()
+                )
+        );        return saved;
     }
 
     // 판매자 거절 — 삭제된 상품 차단
@@ -153,8 +177,14 @@ public class ProductCommandService {
         }
         product.rejectInspectionResult();
         Product saved = productRepository.save(product);
-        eventPublisher.publishEvent(new InspectionRejectedEvent(saved, reason));
-        return saved;
+        saveOutboxEvent(KafkaTopics.INSPECTION_PRICE_REJECTED_TOPIC,
+                new InspectionPriceRejectedEvent(
+                        UUID.randomUUID(),
+                        saved.getProductId(),
+                        saved.getSellerId(),
+                        reason
+                )
+        );        return saved;
     }
 
     // 주문 확정 이벤트 수신 — Kafka 내부 처리이므로 deleted 무관 조회 유지
@@ -167,5 +197,13 @@ public class ProductCommandService {
         productDomainService.validateStatusTransition(product.getStatus(), ProductStatus.SOLD_OUT);
         product.markSoldOutByOrder();
         productRepository.save(product);
+    }
+
+    private void saveOutboxEvent(String topic, Object payload) {
+        try {
+            outboxEventRepository.save(topic, objectMapper.writeValueAsString(payload));
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Outbox 이벤트 직렬화 실패: " + topic, e);
+        }
     }
 }

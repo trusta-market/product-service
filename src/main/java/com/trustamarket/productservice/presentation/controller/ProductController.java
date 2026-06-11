@@ -5,7 +5,6 @@ import com.trustamarket.common.util.SecurityUtil;
 import com.trustamarket.productservice.application.ProductCommandService;
 import com.trustamarket.productservice.application.ProductQueryService;
 import com.trustamarket.productservice.domain.product.Product;
-import com.trustamarket.productservice.domain.product.ProductGrade;
 import com.trustamarket.productservice.presentation.dto.request.InspectionRequestDto;
 import com.trustamarket.productservice.presentation.dto.request.InspectionResultRequest;
 import com.trustamarket.productservice.presentation.dto.request.ProductCreateRequest;

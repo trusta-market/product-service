@@ -21,7 +21,7 @@ public interface ProductJpaRepository extends JpaRepository<ProductJpaEntity, UU
 
     // 외부 노출용 — 소프트 삭제 제외
     @EntityGraph(attributePaths = {"images"})
-    Optional<ProductJpaEntity> findByIdAndDeletedFalse(UUID id);
+    Optional<ProductJpaEntity> findByProductIdAndDeletedFalse(UUID productId);
 
     // 최신 상품 — 소프트 삭제 제외 + ON_SALE만
     @EntityGraph(attributePaths = {"images"})

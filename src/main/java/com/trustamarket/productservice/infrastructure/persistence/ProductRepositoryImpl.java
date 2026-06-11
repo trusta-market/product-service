@@ -31,7 +31,7 @@ public class ProductRepositoryImpl implements ProductRepository {
     @Override
     public Optional<Product> findByIdWithImages(UUID productId) {
         // 외부 노출용 — 소프트 삭제 제외
-        return productJpaRepository.findByIdAndDeletedFalse(productId).map(productMapper::toDomain);
+        return productJpaRepository.findByProductIdAndDeletedFalse(productId).map(productMapper::toDomain);
     }
 
     @Override

@@ -2,7 +2,6 @@ package com.trustamarket.productservice.infrastructure.persistence;
 
 import com.trustamarket.productservice.domain.category.Category;
 import com.trustamarket.productservice.domain.category.CategoryRepository;
-import com.trustamarket.productservice.infrastructure.persistence.entity.CategoryJpaEntity;
 import com.trustamarket.productservice.infrastructure.persistence.mapper.CategoryMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;

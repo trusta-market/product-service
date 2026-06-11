@@ -1,6 +1,5 @@
 package com.trustamarket.productservice.application.exception;
 
-import com.trustamarket.common.exception.ForbiddenException;
 import com.trustamarket.productservice.application.exception.errorcode.ProductErrorCode;
 import lombok.Getter;
 

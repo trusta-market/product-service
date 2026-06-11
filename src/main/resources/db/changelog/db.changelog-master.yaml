@@ -14,3 +14,15 @@ databaseChangeLog:
   - include:
       file: sql/V005__add_created_at_index.sql
       relativeToChangelogFile: true
+  - include:
+      file: sql/V006__add_soft_delete_to_products.sql
+      relativeToChangelogFile: true
+  - include:
+      file: sql/V007__add_soft_delete_to_categories.sql
+      relativeToChangelogFile: true
+  - include:
+      file: sql/V008__add_outbox_events.sql
+      relativeToChangelogFile: true
+  - include:
+      file: sql/V009__add_outbox_retry_fields.sql
+      relativeToChangelogFile: true
