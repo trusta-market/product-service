@@ -17,7 +17,7 @@ public class OutboxEventJpaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
+    private UUID outboxId;
 
     @Column(nullable = false, length = 100)
     private String topic;

@@ -1,6 +1,6 @@
 --liquibase formatted sql
 
---changeset seungwon:4 runOnChange:false
+--changeset Seungwon-Choi:4 runOnChange:false
 INSERT INTO p_categories (id, name, parent_id, depth, display_order, inspection_threshold, inspection_policy)
 VALUES
     (gen_random_uuid(), '명품/럭셔리', NULL, 0, 1, NULL, NULL),
@@ -11,7 +11,7 @@ VALUES
     (gen_random_uuid(), '생활/기타',   NULL, 0, 6, NULL, NULL)
 ON CONFLICT DO NOTHING;
 
---changeset seungwon:5 runOnChange:false
+--changeset Seungwon-Choi:5 runOnChange:false
 WITH parent AS (SELECT id FROM p_categories WHERE name = '명품/럭셔리' AND depth = 0 AND parent_id IS NULL)
 INSERT INTO p_categories (id, name, parent_id, depth, display_order, inspection_threshold, inspection_policy)
 SELECT gen_random_uuid(), '명품 가방', parent.id, 1, 1, NULL::INTEGER, NULL::VARCHAR FROM parent UNION ALL

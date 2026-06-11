@@ -1,3 +1,7 @@
+--liquibase formatted sql
+
+--changeset Seungwon-Choi:9
+
 ALTER TABLE p_product.p_products
     ADD COLUMN IF NOT EXISTS deleted    BOOLEAN     NOT NULL DEFAULT FALSE,
     ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
