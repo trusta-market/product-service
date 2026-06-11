@@ -24,7 +24,7 @@ public class OutboxEventProcessor {
             kafkaTemplate.send(event.getTopic(), event.getPayload()).get();
             event.markPublished();
             outboxEventRepository.save(event);
-            log.info("[Outbox] 발행 완료 - topic: {}, id: {}", event.getTopic(), event.getId());
+            log.info("[Outbox] 발행 완료 - topic: {}, id: {}", event.getTopic(), event.getOutboxId());
             return true;
         } catch (Exception e) {
             event.incrementRetryCount();
@@ -32,11 +32,11 @@ public class OutboxEventProcessor {
                 event.markFailed();
                 outboxEventRepository.save(event);
                 log.error("[Outbox] 최대 재시도({}) 초과, 격리 처리 — topic: {}, id: {}. 수동 확인 필요.",
-                        maxRetry, event.getTopic(), event.getId(), e);
+                        maxRetry, event.getTopic(), event.getOutboxId(), e);
                 return true; // failed=true로 격리했으므로 다음 이벤트 계속 처리
             }
             outboxEventRepository.save(event);
-            log.error("[Outbox] 발행 실패 - topic: {}, id: {}", event.getTopic(), event.getId(), e);
+            log.error("[Outbox] 발행 실패 - topic: {}, id: {}", event.getTopic(), event.getOutboxId(), e);
             return false; // 순서 보장을 위해 이번 배치 중단
         }
     }
