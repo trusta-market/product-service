@@ -10,12 +10,3 @@ spring:
       label: ${SPRING_CLOUD_CONFIG_LABEL:develop}
       fail-fast: ${SPRING_CLOUD_CONFIG_FAIL_FAST:false}
       override-none: true
-
----
-spring:
-  config:
-    activate:
-      on-profile: local
-  jpa:
-    hibernate:
-      ddl-auto: none
