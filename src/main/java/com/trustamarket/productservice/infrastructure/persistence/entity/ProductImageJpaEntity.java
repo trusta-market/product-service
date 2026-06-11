@@ -16,6 +16,7 @@ public class ProductImageJpaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "id")
     private UUID imageId;
 
     // 양방향 관계 — product_id FK를 이 쪽에서 직접 관리

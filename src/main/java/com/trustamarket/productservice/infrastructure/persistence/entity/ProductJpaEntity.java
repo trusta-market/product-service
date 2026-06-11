@@ -22,6 +22,7 @@ public class ProductJpaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "id")
     @EqualsAndHashCode.Include
     private UUID productId;
 
