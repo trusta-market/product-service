@@ -1,6 +1,7 @@
 package com.trustamarket.productservice.infrastructure.persistence.scheduler;
 
 import com.trustamarket.productservice.infrastructure.persistence.OutboxEventJpaRepository;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,6 +17,8 @@ import java.time.temporal.ChronoUnit;
 @RequiredArgsConstructor
 public class OutboxEventPurgeScheduler {
 
+    private static final int MIN_RETAIN_DAYS = 1;
+
     private final OutboxEventJpaRepository outboxEventRepository;
 
     @Value("${trusta.outbox.purge.published-retain-days:7}")
@@ -23,6 +26,22 @@ public class OutboxEventPurgeScheduler {
 
     @Value("${trusta.outbox.purge.failed-retain-days:30}")
     private int failedRetainDays;
+
+    @PostConstruct
+    void validateRetainDays() {
+        if (publishedRetainDays < MIN_RETAIN_DAYS) {
+            throw new IllegalStateException(
+                    "trusta.outbox.purge.published-retain-days 는 최소 %d 이상이어야 합니다. (현재: %d)"
+                            .formatted(MIN_RETAIN_DAYS, publishedRetainDays));
+        }
+        if (failedRetainDays < MIN_RETAIN_DAYS) {
+            throw new IllegalStateException(
+                    "trusta.outbox.purge.failed-retain-days 는 최소 %d 이상이어야 합니다. (현재: %d)"
+                            .formatted(MIN_RETAIN_DAYS, failedRetainDays));
+        }
+        log.info("[Outbox Purge] 설정 검증 완료 — published 보관: {}일, failed 보관: {}일",
+                publishedRetainDays, failedRetainDays);
+    }
 
     @Scheduled(cron = "${trusta.outbox.purge.cron:0 0 3 * * *}")
     @Transactional
