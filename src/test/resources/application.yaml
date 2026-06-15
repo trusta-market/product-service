@@ -4,7 +4,6 @@ spring:
   main:
     allow-bean-definition-overriding: true
 
-  # 테스트는 외부 config-server / kafka / s3 자격증명 의존 X
   config:
     import: ""
   cloud:
@@ -23,11 +22,17 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none           # update → none (Liquibase가 DDL 관리)
     properties:
       hibernate:
         default_schema: ${SCHEMA:p_product}
         dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  flyway:
+    enabled: false             # Flyway 자동 감지 차단
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
 
   kafka:
     bootstrap-servers: localhost:9092
@@ -37,7 +42,6 @@ spring:
       name: testuser
       password: testpass
 
-# 테스트용 dummy 자격증명 — 실제 S3 호출 X (단위 test 컨텍스트 로드 목적)
 cloud:
   aws:
     credentials:
@@ -53,3 +57,10 @@ cloud:
 trusta:
   security:
     trust-gateway-headers: false
+  outbox:
+    poll-interval-ms: 1000
+    max-retry: 5
+  messaging:
+    topic:
+      product-sold-out: order.product.sold-out
+      inspection-completed: inspection.completed
