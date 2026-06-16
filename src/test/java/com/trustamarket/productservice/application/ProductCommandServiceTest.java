@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trustamarket.productservice.application.event.kafka.ProductCreatedEvent;
 import com.trustamarket.productservice.application.exception.CategoryNotFoundException;
+import com.trustamarket.productservice.application.exception.InvalidPriceException;
+import com.trustamarket.productservice.application.exception.errorcode.ProductErrorCode;
 import com.trustamarket.productservice.application.port.OutboxEventRepository;
 import com.trustamarket.productservice.infrastructure.kafka.KafkaTopics;
 import com.trustamarket.productservice.domain.category.Category;
@@ -69,6 +71,7 @@ class ProductCommandServiceTest {
         assertThat(result.getStatus()).isEqualTo(ProductStatus.PENDING_INSPECTION);
         assertThat(result.getInspectionStatus()).isEqualTo(InspectionStatus.PENDING);
 
+        // outbox 저장 계약 검증 — ProductCreatedEvent 직렬화 후 PRODUCT_CREATED_TOPIC 으로 1회 저장돼야 함
         verify(objectMapper, times(1)).writeValueAsString(any(ProductCreatedEvent.class));
         verify(outboxEventRepository, times(1))
                 .save(eq(KafkaTopics.PRODUCT_CREATED_TOPIC), eq("{\"event\":\"product-created\"}"));
@@ -135,7 +138,7 @@ class ProductCommandServiceTest {
     }
 
     @Test
-    @DisplayName("price null → IllegalArgumentException (Integer auto-unbox NPE 가드)")
+    @DisplayName("price null → InvalidPriceException (ErrorCode: INVALID_PRICE)")
     void priceNull_throws() {
         UUID sellerId = UUID.randomUUID();
         Category cat = category("패션", 200_000);
@@ -143,7 +146,25 @@ class ProductCommandServiceTest {
 
         assertThatThrownBy(() ->
                 service.create(sellerId, "title", "desc", null, cat.getCategoryId(), null)
-        ).isInstanceOf(IllegalArgumentException.class);
+        )
+                .isInstanceOf(InvalidPriceException.class)
+                .extracting(e -> ((InvalidPriceException) e).getErrorCode())
+                .isEqualTo(ProductErrorCode.INVALID_PRICE);
+    }
+
+    @Test
+    @DisplayName("price 음수 → InvalidPriceException (ErrorCode: INVALID_PRICE)")
+    void priceNegative_throws() {
+        UUID sellerId = UUID.randomUUID();
+        Category cat = category("패션", 200_000);
+        when(categoryRepository.findById(cat.getCategoryId())).thenReturn(Optional.of(cat));
+
+        assertThatThrownBy(() ->
+                service.create(sellerId, "title", "desc", -1L, cat.getCategoryId(), null)
+        )
+                .isInstanceOf(InvalidPriceException.class)
+                .extracting(e -> ((InvalidPriceException) e).getErrorCode())
+                .isEqualTo(ProductErrorCode.INVALID_PRICE);
     }
 
     @Test
@@ -157,6 +178,7 @@ class ProductCommandServiceTest {
                 service.create(sellerId, "title", "desc", 50_000L, missingId, null)
         ).isInstanceOf(CategoryNotFoundException.class);
 
+        // 실패 경로에서는 outbox 이벤트가 저장되면 안 됨
         verify(outboxEventRepository, never()).save(anyString(), anyString());
     }
 
