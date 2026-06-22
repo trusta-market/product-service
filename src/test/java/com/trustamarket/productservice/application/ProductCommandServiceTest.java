@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trustamarket.productservice.application.event.kafka.ProductCreatedEvent;
 import com.trustamarket.productservice.application.exception.CategoryNotFoundException;
-import com.trustamarket.productservice.application.exception.InvalidPriceException;
+import com.trustamarket.productservice.application.exception.ProductException;
 import com.trustamarket.productservice.application.exception.errorcode.ProductErrorCode;
 import com.trustamarket.productservice.application.port.OutboxEventRepository;
 import com.trustamarket.productservice.infrastructure.kafka.KafkaTopics;
@@ -147,8 +147,8 @@ class ProductCommandServiceTest {
         assertThatThrownBy(() ->
                 service.create(sellerId, "title", "desc", null, cat.getCategoryId(), null)
         )
-                .isInstanceOf(InvalidPriceException.class)
-                .extracting(e -> ((InvalidPriceException) e).getErrorCode())
+                .isInstanceOf(ProductException.class)
+                .extracting(e -> ((ProductException) e).getErrorCode())
                 .isEqualTo(ProductErrorCode.INVALID_PRICE);
     }
 
@@ -162,8 +162,8 @@ class ProductCommandServiceTest {
         assertThatThrownBy(() ->
                 service.create(sellerId, "title", "desc", -1L, cat.getCategoryId(), null)
         )
-                .isInstanceOf(InvalidPriceException.class)
-                .extracting(e -> ((InvalidPriceException) e).getErrorCode())
+                .isInstanceOf(ProductException.class)
+                .extracting(e -> ((ProductException) e).getErrorCode())
                 .isEqualTo(ProductErrorCode.INVALID_PRICE);
     }
 

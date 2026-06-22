@@ -5,10 +5,10 @@ import com.trustamarket.productservice.application.exception.errorcode.ProductEr
 import lombok.Getter;
 
 @Getter
-public class InvalidPriceException extends BadRequestException {
+public class ProductException extends BadRequestException {
     private final ProductErrorCode errorCode;
 
-    public InvalidPriceException(ProductErrorCode errorCode) {
+    public ProductException(ProductErrorCode errorCode) {
         super(errorCode);
         this.errorCode = errorCode;
     }

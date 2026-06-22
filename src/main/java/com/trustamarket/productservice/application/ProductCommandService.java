@@ -2,11 +2,7 @@ package com.trustamarket.productservice.application;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.trustamarket.productservice.application.exception.CategoryNotFoundException;
-import com.trustamarket.productservice.application.exception.InvalidPriceException;
-import com.trustamarket.productservice.application.exception.InvalidStatusTransitionException;
-import com.trustamarket.productservice.application.exception.ProductAccessDeniedException;
-import com.trustamarket.productservice.application.exception.ProductNotFoundException;
+import com.trustamarket.productservice.application.exception.*;
 import com.trustamarket.productservice.application.exception.errorcode.ProductErrorCode;
 import com.trustamarket.productservice.domain.category.Category;
 import com.trustamarket.productservice.domain.category.CategoryRepository;
@@ -63,7 +59,7 @@ public class ProductCommandService {
                 .orElseThrow(() -> new CategoryNotFoundException(ProductErrorCode.CATEGORY_NOT_FOUND));
 
         if (price == null || price < 0) {
-            throw new InvalidPriceException(ProductErrorCode.INVALID_PRICE);
+            throw new ProductException(ProductErrorCode.INVALID_PRICE);
         }
         boolean requiresInspection = productDomainService.requiresInspection(category, price);
 
