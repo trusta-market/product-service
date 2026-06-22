@@ -2,10 +2,7 @@ package com.trustamarket.productservice.application;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.trustamarket.productservice.application.exception.CategoryNotFoundException;
-import com.trustamarket.productservice.application.exception.InvalidStatusTransitionException;
-import com.trustamarket.productservice.application.exception.ProductAccessDeniedException;
-import com.trustamarket.productservice.application.exception.ProductNotFoundException;
+import com.trustamarket.productservice.application.exception.*;
 import com.trustamarket.productservice.application.exception.errorcode.ProductErrorCode;
 import com.trustamarket.productservice.domain.category.Category;
 import com.trustamarket.productservice.domain.category.CategoryRepository;
@@ -40,7 +37,7 @@ public class ProductCommandService {
     private final OutboxEventRepository outboxEventRepository;
     private final ObjectMapper objectMapper;
 
-     // 명령용 활성 상품 조회 — 소프트 삭제된 상품은 404 처리, 판매자가 직접 호출하는 모든 명령 메서드에서 사용
+    // 명령용 활성 상품 조회 — 소프트 삭제된 상품은 404 처리, 판매자가 직접 호출하는 모든 명령 메서드에서 사용
     private Product findActiveProduct(UUID productId) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
@@ -50,20 +47,26 @@ public class ProductCommandService {
         return product;
     }
 
-     // 시스템 내부용 조회 — Kafka 이벤트 처리 등 deleted 무관하게 조회
+    // 시스템 내부용 조회 — Kafka 이벤트 처리 등 deleted 무관하게 조회
     private Product findProductInternal(UUID productId) {
         return productRepository.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
     }
 
+    // 가격 불변식 검증 — create/update 공통, null 또는 음수 차단
+    private void validatePrice(Long price) {
+        if (price == null || price < 0) {
+            throw new ProductException(ProductErrorCode.INVALID_PRICE);
+        }
+    }
+
     // 상품 등록
     public Product create(UUID sellerId, String title, String description, Long price, UUID categoryId, List<String> imageUrls) {
+        validatePrice(price);
+
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new CategoryNotFoundException(ProductErrorCode.CATEGORY_NOT_FOUND));
 
-        if (price == null) {
-            throw new IllegalArgumentException("price must not be null");
-        }
         boolean requiresInspection = productDomainService.requiresInspection(category, price);
 
         Product product = Product.create(
@@ -109,7 +112,7 @@ public class ProductCommandService {
         if (!product.isOwnedBy(sellerId)) {
             throw new ProductAccessDeniedException(ProductErrorCode.PRODUCT_ACCESS_DENIED);
         }
-
+        validatePrice(price);
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new CategoryNotFoundException(ProductErrorCode.CATEGORY_NOT_FOUND));
 
