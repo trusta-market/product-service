@@ -53,14 +53,20 @@ public class ProductCommandService {
                 .orElseThrow(() -> new ProductNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
     }
 
-    // 상품 등록
-    public Product create(UUID sellerId, String title, String description, Long price, UUID categoryId, List<String> imageUrls) {
-        Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new CategoryNotFoundException(ProductErrorCode.CATEGORY_NOT_FOUND));
-
+    // 가격 불변식 검증 — create/update 공통, null 또는 음수 차단
+    private void validatePrice(Long price) {
         if (price == null || price < 0) {
             throw new ProductException(ProductErrorCode.INVALID_PRICE);
         }
+    }
+
+    // 상품 등록
+    public Product create(UUID sellerId, String title, String description, Long price, UUID categoryId, List<String> imageUrls) {
+        validatePrice(price);
+
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new CategoryNotFoundException(ProductErrorCode.CATEGORY_NOT_FOUND));
+
         boolean requiresInspection = productDomainService.requiresInspection(category, price);
 
         Product product = Product.create(
@@ -106,7 +112,7 @@ public class ProductCommandService {
         if (!product.isOwnedBy(sellerId)) {
             throw new ProductAccessDeniedException(ProductErrorCode.PRODUCT_ACCESS_DENIED);
         }
-
+        validatePrice(price);
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new CategoryNotFoundException(ProductErrorCode.CATEGORY_NOT_FOUND));
 
