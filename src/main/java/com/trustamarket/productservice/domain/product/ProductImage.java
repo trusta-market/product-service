@@ -2,7 +2,6 @@ package com.trustamarket.productservice.domain.product;
 
 import com.trustamarket.productservice.application.exception.InvalidImageUrlException;
 import com.trustamarket.productservice.application.exception.errorcode.ProductErrorCode;
-import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -11,17 +10,12 @@ import lombok.NoArgsConstructor;
 import java.time.Instant;
 import java.util.UUID;
 
-@Entity
-@Table(name = "p_product_images")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EqualsAndHashCode(of = "imageId")
 public class ProductImage {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID imageId;
-    
     private String imageUrl;
     private int sortOrder;
     private boolean isThumbnail;
