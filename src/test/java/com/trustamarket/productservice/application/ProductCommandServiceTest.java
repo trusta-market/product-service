@@ -141,30 +141,35 @@ class ProductCommandServiceTest {
     @DisplayName("price null → InvalidPriceException (ErrorCode: INVALID_PRICE)")
     void priceNull_throws() {
         UUID sellerId = UUID.randomUUID();
-        Category cat = category("패션", 200_000);
-        when(categoryRepository.findById(cat.getCategoryId())).thenReturn(Optional.of(cat));
+        UUID categoryId = UUID.randomUUID();
+        // validatePrice 가 카테고리 조회 전에 실행되므로 categoryRepository stub 불필요
 
         assertThatThrownBy(() ->
-                service.create(sellerId, "title", "desc", null, cat.getCategoryId(), null)
+                service.create(sellerId, "title", "desc", null, categoryId, null)
         )
                 .isInstanceOf(ProductException.class)
                 .extracting(e -> ((ProductException) e).getErrorCode())
                 .isEqualTo(ProductErrorCode.INVALID_PRICE);
+
+        // 카테고리 조회가 호출되지 않았음을 명시적으로 검증 (회귀 방지)
+        verify(categoryRepository, never()).findById(any());
     }
 
     @Test
     @DisplayName("price 음수 → InvalidPriceException (ErrorCode: INVALID_PRICE)")
     void priceNegative_throws() {
         UUID sellerId = UUID.randomUUID();
-        Category cat = category("패션", 200_000);
-        when(categoryRepository.findById(cat.getCategoryId())).thenReturn(Optional.of(cat));
+        UUID categoryId = UUID.randomUUID();
+        // validatePrice 가 카테고리 조회 전에 실행되므로 categoryRepository stub 불필요
 
         assertThatThrownBy(() ->
-                service.create(sellerId, "title", "desc", -1L, cat.getCategoryId(), null)
+                service.create(sellerId, "title", "desc", -1L, categoryId, null)
         )
                 .isInstanceOf(ProductException.class)
                 .extracting(e -> ((ProductException) e).getErrorCode())
                 .isEqualTo(ProductErrorCode.INVALID_PRICE);
+
+        verify(categoryRepository, never()).findById(any());
     }
 
     @Test
