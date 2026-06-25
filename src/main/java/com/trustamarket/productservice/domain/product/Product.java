@@ -3,71 +3,43 @@ package com.trustamarket.productservice.domain.product;
 import com.trustamarket.productservice.application.exception.ImageNotFoundException;
 import com.trustamarket.productservice.application.exception.InvalidInspectionStatusException;
 import com.trustamarket.productservice.application.exception.errorcode.ProductErrorCode;
-import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
 
-@Entity
 @Getter
-@Table(name = "p_products")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Product {
 
     private static final int MAX_IMAGE_COUNT = 10;
     private static final int MAX_TITLE_LENGTH = 100;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @EqualsAndHashCode.Include
     private UUID productId;
-
-    @Column(nullable = false)
     private UUID sellerId;
-
-    @Column(nullable = false)
     private UUID categoryId;
-
     private UUID inspectorId;
-
-    @Column(nullable = false, length = MAX_TITLE_LENGTH)
     private String title;
-
-    @Column(columnDefinition = "TEXT")
     private String description;
-
-    @Column(nullable = false)
     private Long price;
 
     // inspection-service가 제안한 가격. PRICE_SUGGESTED 상태일 때만 유효하며, 판매자가 수락하면 price를 이 값으로 교체한다.
-    @Column
     private Long suggestedPrice;
 
-    @Enumerated(EnumType.STRING)
     private ProductGrade grade;
-
-    @Enumerated(EnumType.STRING)
     private ProductStatus status;
-
-    @Enumerated(EnumType.STRING)
     private InspectionStatus inspectionStatus;
 
-    // orphanRemoval=true — update() 의 images.clear() 가 DB row 도 같이 삭제하도록 (orphan row 방지)
-    // @OrderBy — sortOrder 변경 후 응답 순서 안정화 (reorder 후 reload 없이도 정렬됨)
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @OrderBy("sortOrder ASC")
-    @JoinColumn(name = "product_id")
     private List<ProductImage> images;
 
-    @Column(nullable = false)
     private boolean deleted = false;
-
-    @Column
     private Instant deletedAt;
 
     private Instant createdAt;
@@ -164,7 +136,7 @@ public class Product {
         }
 
         if (imageUrls != null) {
-            this.images.clear(); // 기존 이미지 초기화 (orphanRemoval=true 설정 시 DB에서도 삭제됨)
+            this.images.clear(); // 기존 이미지 초기화 (도메인 컬렉션에서 제거; JPA 측은 ProductJpaEntity 의 orphanRemoval 이 담당)
             for (int i = 0; i < imageUrls.size(); i++) {
                 this.addImage(ProductImage.create(this, imageUrls.get(i), i, i == 0));
             }
@@ -220,7 +192,7 @@ public class Product {
         onUpdate();
     }
 
-// 검수 대상 여부 — 카테고리별 기준 금액과 비교
+    // 검수 대상 여부 — 카테고리별 기준 금액과 비교
     public boolean requiresInspection(int highValueThreshold) {
         return this.price >= highValueThreshold;
     }
@@ -318,7 +290,7 @@ public class Product {
                 .findFirst()
                 .orElseThrow(() -> new ImageNotFoundException(ProductErrorCode.IMAGE_NOT_FOUND));
 
-        targetImage.delete(); // ProductImage 엔티티에 추가한 delete() 호출
+        targetImage.delete();
 
         // 2. 만약 삭제된 이미지가 대표 이미지(Thumbnail)였다면 다른 이미지를 재설정
         if (targetImage.isThumbnail()) {
