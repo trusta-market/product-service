@@ -79,7 +79,9 @@ public class ProductImage {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof ProductImage that)) return false;
+        if (o == null || getClass() != o.getClass()) return false;
+        ProductImage that = (ProductImage) o;
+        // imageId 가 null 인 transient 상태에서는 참조 동일성 (this == o) 만 인정
         return imageId != null && imageId.equals(that.imageId);
     }
 
