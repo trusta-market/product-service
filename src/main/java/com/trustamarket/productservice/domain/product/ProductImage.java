@@ -3,7 +3,6 @@ package com.trustamarket.productservice.domain.product;
 import com.trustamarket.productservice.application.exception.InvalidImageUrlException;
 import com.trustamarket.productservice.application.exception.errorcode.ProductErrorCode;
 import lombok.AccessLevel;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -12,7 +11,6 @@ import java.util.UUID;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@EqualsAndHashCode(of = "imageId")
 public class ProductImage {
 
     private UUID imageId;
@@ -76,5 +74,17 @@ public class ProductImage {
         if (imageUrl == null || imageUrl.isBlank()) {
             throw new InvalidImageUrlException(ProductErrorCode.INVALID_IMAGE_URL);
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ProductImage that)) return false;
+        return imageId != null && imageId.equals(that.imageId);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }
