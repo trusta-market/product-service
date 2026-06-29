@@ -2,26 +2,18 @@ package com.trustamarket.productservice.domain.product;
 
 import com.trustamarket.productservice.application.exception.InvalidImageUrlException;
 import com.trustamarket.productservice.application.exception.errorcode.ProductErrorCode;
-import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 import java.util.UUID;
 
-@Entity
-@Table(name = "p_product_images")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@EqualsAndHashCode(of = "imageId")
 public class ProductImage {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID imageId;
-    
     private String imageUrl;
     private int sortOrder;
     private boolean isThumbnail;
@@ -82,5 +74,19 @@ public class ProductImage {
         if (imageUrl == null || imageUrl.isBlank()) {
             throw new InvalidImageUrlException(ProductErrorCode.INVALID_IMAGE_URL);
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ProductImage that = (ProductImage) o;
+        // imageId 가 null 인 transient 상태에서는 참조 동일성 (this == o) 만 인정
+        return imageId != null && imageId.equals(that.imageId);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }
