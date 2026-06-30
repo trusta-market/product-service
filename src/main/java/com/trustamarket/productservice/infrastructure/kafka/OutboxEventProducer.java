@@ -1,13 +1,11 @@
 package com.trustamarket.productservice.infrastructure.kafka;
 
-import com.trustamarket.productservice.infrastructure.persistence.OutboxEventJpaRepository;
 import com.trustamarket.productservice.infrastructure.persistence.entity.OutboxEventJpaEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -16,7 +14,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class OutboxEventProducer {
 
-    private final OutboxEventJpaRepository outboxEventRepository;
+    private final OutboxEventClaimer outboxEventClaimer;
     private final OutboxEventProcessor outboxEventProcessor;
 
     @Value("${trusta.outbox.max-retry:5}")
@@ -25,10 +23,10 @@ public class OutboxEventProducer {
     @Value("${trusta.outbox.batch-size:500}")
     private int batchSize;
 
+    // ✅ @Transactional 제거 — 락 획득/처리 트랜잭션 분리
     @Scheduled(fixedDelayString = "${trusta.outbox.poll-interval-ms:1000}")
-    @Transactional
     public void producePendingEvents() {
-        List<OutboxEventJpaEntity> events = outboxEventRepository.lockNextBatch(batchSize);
+        List<OutboxEventJpaEntity> events = outboxEventClaimer.claimBatch(batchSize);
 
         for (OutboxEventJpaEntity event : events) {
             boolean shouldContinue = outboxEventProcessor.process(event, maxRetry);
