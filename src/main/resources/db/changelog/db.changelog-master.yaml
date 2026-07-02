@@ -26,3 +26,6 @@ databaseChangeLog:
   - include:
       file: sql/V009__add_composite_partial_indexes.sql
       relativeToChangelogFile: true
+  - include:
+      file: sql/V010__add_claimed_to_outbox_events.sql
+      relativeToChangelogFile: true

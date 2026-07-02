@@ -35,13 +35,16 @@ public class OutboxEventJpaEntity {
     private Instant publishedAt;
 
     @Column(nullable = false)
-    private int retryCount = 0;         // 발행 시도 실패 횟수
+    private int retryCount = 0;
 
     @Column
-    private Instant lastFailedAt;       // 마지막 실패 시각 (모니터링용)
+    private Instant lastFailedAt;
 
     @Column(nullable = false)
     private boolean failed = false;
+
+    @Column(nullable = false)
+    private boolean claimed = false;
 
     @Builder
     public OutboxEventJpaEntity(String topic, String payload) {
@@ -55,14 +58,16 @@ public class OutboxEventJpaEntity {
         this.publishedAt = Instant.now();
     }
 
-    // 실패 횟수 증가
     public void incrementRetryCount() {
         this.retryCount++;
         this.lastFailedAt = Instant.now();
     }
 
-    //  최대 재시도 초과 시 격리
     public void markFailed() {
         this.failed = true;
+    }
+
+    public void markClaimed() {
+        this.claimed = true;
     }
 }
